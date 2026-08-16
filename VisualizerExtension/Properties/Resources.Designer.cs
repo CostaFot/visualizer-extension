@@ -106,6 +106,15 @@ namespace VisualizerExtension.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Visualizer (rows).
+        /// </summary>
+        public static string Command_Visualizer_Rows {
+            get {
+                return ResourceManager.GetString("Command_Visualizer_Rows", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Pin the Visualizer band via the Dock's band manager to see your audio dance.
         /// </summary>
         public static string Command_Visualizer_Subtitle {

@@ -8,8 +8,11 @@ A PowerToys **Command Palette** extension whose whole product is one pinnable **
 audio spectrum visualizer for whatever the machine is playing. WASAPI **loopback** capture of the
 default render endpoint (no microphone, no per-app hooks, no audio dependencies) → hand-rolled FFT
 → 8 log-spaced bands → block glyphs (U+2581..U+2588) mutated into a dock button's title at
-~15 fps. .NET 9 / C# / MSIX, self-contained single-file JIT (trim/AOT deliberately OFF;
-`AllowUnsafeBlocks` ON for the COM vtable interop).
+~15 fps. .NET 10 / C# / MSIX, self-contained single-file JIT (trim/AOT deliberately OFF;
+`AllowUnsafeBlocks` ON for the COM vtable interop). Extension SDK pinned to 0.11.260520004
+(`Directory.Packages.props`) — the first with `PlainTextContent`, which the canvas page needs;
+minimum host is therefore CmdPal 0.11 (note the PowerToys version requirement in the app
+description at release time).
 
 ## Reference projects — use them A LOT
 
@@ -25,7 +28,9 @@ internals: `C:\Users\jarla\code\PowerToys\src\modules\cmdpal\Microsoft.CmdPal.UI
 
 ## Architecture in one screen
 
-Two render surfaces over one shared capture; everything else is scaffold.
+Several render surfaces (two dock bands, two pages) over one shared capture; everything else is
+scaffold. What the host can and cannot render — and why each surface uses the channel it does —
+is measured and documented in `notes/rendering.md`; consult it before inventing a new surface.
 
 - **The render channel (both surfaces): in-place mutation.** Stable `ListItem` instances returned
   from `GetItems()` forever; each tick mutates `.Title` — the host caches view models by
@@ -36,11 +41,20 @@ Two render surfaces over one shared capture; everything else is scaffold.
   start at the first observer, torn down at the last — a hidden surface costs nothing.
 - `Pages/VisualizerDockBand.cs` — the band (from `GetDockBands()`, wrapped in a `CommandItem`).
   ONE item, 8 vertical block glyphs (U+2581..U+2588) — 8 is the measured title-budget max, see
-  Gotchas. Click opens `VisualizerPage`; volume mixer is a `MoreCommands` right-click action.
-- `Pages/VisualizerPage.cs` — the big in-palette visualizer and the top-level palette entry: one
-  row per band, titles are horizontal bars (full U+2588 blocks + one left-partial U+2589..U+258F
-  tip; partial advances are ink-proportional in Segoe UI Symbol so bar length is continuous —
-  32 cells × 8 = 256 steps), subtitles are the band's frequency range.
+  Gotchas. Click opens `VisualizerCanvasPage`; volume mixer is a `MoreCommands` right-click
+  action. (Two bands are registered while the TODO #4 block-vs-braille A/B runs.)
+- `Pages/VisualizerCanvasPage.cs` — THE in-palette visualizer and the top-level palette entry
+  (TODO #12): a `ContentPage` holding one stable `PlainTextContent`
+  (`FontFamily.Monospace` — host-guaranteed Cascadia Mono/Consolas), drawn as a 2-D character
+  canvas: 20 vertical bars × 14 rows (lower-partial blocks U+2581..U+2588 = 112 vertical steps,
+  spaces are grid-safe in monospace), peak-hold caps (U+2594, hold-then-fall — TODO #6), and a
+  static frequency-axis footer. Frames mutate `_content.Text` only (push-only-on-change);
+  `ItemsChanged` is never raised — on content pages it rebuilds the whole content control.
+- `Pages/VisualizerPage.cs` — the v1 rows page, kept reachable via the top-level item's context
+  menu until TODO #13's style setting: one row per band, titles are horizontal bars (full U+2588
+  blocks + one left-partial U+2589..U+258F tip — 256 steps), subtitles the band's frequency
+  range. A `DynamicListPage` that ignores search text — a plain `ListPage`'s rows get
+  fuzzy-filtered/reordered the moment the user types.
 - `Helpers/RenderLoop.cs` — the shared pump: ~15 fps timer, **idle throttle** (2 Hz after ~3 s of
   silence, still sampling → snaps back on audio; a pinned band must not burn CPU all day),
   every tick exception-wrapped (a throw on a pool thread kills the process), and a draining
@@ -137,10 +151,13 @@ Playing audio is fine and expected; deploying the extension remains the user's j
 
 Shipped so far: Tier-2 loopback+FFT dock band with visibility lifecycle, idle throttle, and
 disposal; the ellipsis fix (8-bar budget, measured); the in-palette `VisualizerPage` v1
-(horizontal bars — proves the palette render channel, looks silly, superseded by TODO #12).
-**Next up: `notes/TODO.md`** — headline items: a proper VERTICAL page visualizer after a
-CmdPal-rendering-limits investigation (#12), user-selectable visualizer styles via settings (#13),
-color exploration (#3). Also still open, from
+(horizontal bars — proved the palette render channel, now the secondary "rows" entry); the
+CmdPal-rendering-limits investigation (`notes/rendering.md`) and the vertical
+`VisualizerCanvasPage` with peak caps it produced (TODO #12 + #6, verified live 2026-08-16;
+visual polish deferred to the #13/#3 work); the braille dock band spike (#4, A/B verdict
+pending).
+**Next up: `notes/TODO.md`** — headline items: user-selectable visualizer styles via settings
+(#13), color exploration (#3), the #4 braille verdict. Also still open, from
 `notes/visualizer-extension-plan.md` Step 4: settings page (bar count, target fps, decay, idle
 behavior), Tier-1 peak-meter low-power mode as a settings choice, real PNG logo assets (current
 `Assets/` PNGs are placeholders copied from AgentsPanelExtension — replace before any release),

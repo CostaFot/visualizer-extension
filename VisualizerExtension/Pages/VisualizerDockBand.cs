@@ -9,7 +9,8 @@ namespace VisualizerExtension;
 // The product: a Command Palette Dock band whose single button renders a live audio spectrum as
 // glyphs in the button title (which glyphs is the injected ISpectrumRenderer's call — block bars
 // or braille), ~15 fps while audio plays. Clicking the button opens the big in-palette visualizer
-// (VisualizerPage); the volume mixer lives in the right-click menu.
+// (the injected page command — VisualizerCanvasPage); the volume mixer lives in the right-click
+// menu.
 //
 // The 15-fps channel is IN-PLACE MUTATION: GetItems() returns the same ListItem instance forever
 // and each frame mutates its Title — the host caches dock view models by IListItem reference and
@@ -77,7 +78,7 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
         }
     }
 
-    public VisualizerDockBand(SpectrumSource source, VisualizerPage page, ISpectrumRenderer renderer, string id, string title)
+    public VisualizerDockBand(SpectrumSource source, ICommand page, ISpectrumRenderer renderer, string id, string title)
     {
         _source = source;
         _renderer = renderer;

@@ -67,6 +67,9 @@
   <data name="Command_Visualizer_Subtitle" xml:space="preserve">
     <value>Pin the Visualizer band via the Dock's band manager to see your audio dance</value>
   </data>
+  <data name="Command_Visualizer_Rows" xml:space="preserve">
+    <value>Visualizer (rows)</value>
+  </data>
   <data name="Band_Title" xml:space="preserve">
     <value>Visualizer</value>
   </data>

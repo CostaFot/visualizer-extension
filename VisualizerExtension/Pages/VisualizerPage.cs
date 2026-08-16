@@ -21,7 +21,12 @@ namespace VisualizerExtension;
 //
 // Same lifecycle as the dock band: refcounted INotifyItemsChanged add/remove accessors acquire a
 // SpectrumSource lease + RenderLoop while the page is open and tear both down when it closes.
-internal sealed partial class VisualizerPage : ListPage, INotifyItemsChanged, IDisposable
+//
+// DynamicListPage, not ListPage: a plain list page's rows get fuzzy-filtered and REORDERED against
+// their titles the moment the user types in the palette search box (host ListViewModel) — fatal
+// when titles are glyph runs. IDynamicListPage bypasses the host filter entirely; the search text
+// is simply ignored.
+internal sealed partial class VisualizerPage : DynamicListPage, INotifyItemsChanged, IDisposable
 {
     private const int BandCount = 8;
     private const int CellCount = 32; // bar width in glyph cells; 8 sub-steps per cell
@@ -104,6 +109,11 @@ internal sealed partial class VisualizerPage : ListPage, INotifyItemsChanged, ID
 
     // Same instances forever — the per-item mutation channel depends on it.
     public override IListItem[] GetItems() => _items;
+
+    // The rows are a canvas, not search results — typing filters nothing.
+    public override void UpdateSearchText(string oldSearch, string newSearch)
+    {
+    }
 
     private void StartLocked()
     {

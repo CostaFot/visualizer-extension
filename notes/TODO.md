@@ -78,12 +78,13 @@ instead of the current mono downmix in `AppendSamples` (keep two rings, or inter
 read time). Doubles FFT cost — still trivial at 2048 samples. Natural "mode" entry alongside
 item 4's render style.
 
-## 6. Peak-hold caps
+## 6. ~~Peak-hold caps~~ DONE (palette canvas) 2026-08-16
 
-The little marker that lingers at the recent per-bar maximum and decays slowly, like hardware EQs.
-With only 8 vertical levels per glyph in the dock it's subtle (a cap often coincides with the bar
-top); on the palette page's bigger canvas (item 2) it's where this really pays off. Implementation
-is one extra `float[] _peaks` with its own slower decay; rendering decides how to show it.
+Shipped with item 12's `VisualizerCanvasPage`: per-band `_peaks[]` latches upward, holds ~0.75 s,
+then falls 0.03/tick until the bar catches it; rendered as U+2594 (UPPER ONE EIGHTH — hangs at the
+top of its cell) in the cell above the bar top. The dock variant stays unbuilt by choice: with only
+8 vertical levels per glyph a cap usually coincides with the bar top — revisit only if a dock
+style ever wants it (item 13).
 
 ## 7. Beat detection driving pulse/color
 
@@ -99,12 +100,13 @@ On DC power, cap the active rate (e.g. 15 → 10 fps) via `Windows.System.Power.
 Fits the "a pinned band must not burn CPU all day" philosophy; combine with the existing idle
 throttle rather than adding a second timer-juggling path.
 
-## 9. Scrolling spectrogram view (extends item 2)
+## 9. Scrolling spectrogram view (extends item 12)
 
 For the palette page: a waterfall — rows = time, columns = bands, intensity via the block-glyph
-ramp (or braille, item 4) in a monospace code block. Depends on the same unproven
-page-refresh-rate question flagged in item 2; spike the refresh ceiling first, the spectrogram is
-just what to draw once the channel is proven.
+ramp (or braille, item 4). The channel question is ANSWERED by item 12's investigation
+(`notes/rendering.md`): the `PlainTextContent` monospace canvas repaints at up to ~20-24 fps
+(host-global 40 ms batch), so a spectrogram is now just another way to fill
+`VisualizerCanvasPage`'s scratch — i.e. a page render style for item 13's setting.
 
 ## 10. Real logo: the bars ARE the brand
 
@@ -122,33 +124,34 @@ Needs the wav packaged as Content (csproj currently only includes Assets/**/*.pn
 at runtime (the generator math is ~40 lines, see tools/generate-spectrum-test.ps1). Pure
 visualizer scope — it plays a local file, no media integration.
 
-## 12. Proper VERTICAL visualizer in the page (v1 horizontal rows prove the channel, look silly)
+## 12. ~~Proper VERTICAL visualizer in the page~~ DONE 2026-08-16 (canvas shipped; more styles → #13)
 
-The shipped VisualizerPage (item 2) proved the palette list repaints per-row title mutations fast
-enough — but 8 horizontal bars-per-row is not a visualizer, it's a bar chart. The real thing wants
-classic VERTICAL bars rising from a baseline. Requires an investigation pass over what CmdPal can
-actually render and how far each channel can be pushed — the host source is local
-(C:\Users\jarla\code\PowerToys\src\modules\cmdpal\), so answer from source, not guesswork:
+The investigation pass ran first, from host source (findings + file:line evidence in
+**`notes/rendering.md`** — read that before touching any render surface). Outcome of the three
+candidate channels:
 
-- **Stacked-rows vertical EQ on a ListPage**: N rows = N vertical slices; row r's title renders
-  every band's slice at that height using ONLY the U+2581..U+2588 ramp (uniform 11.256 px
-  advances — columns align across rows IF every cell is a ramp glyph; a space or any non-ramp
-  char breaks the grid, same class of trap as item 4's blank braille). Vertical resolution
-  becomes rows × 8. Open questions: row spacing/padding between ListItems visually breaks the
-  columns into ribbons — how bad? Can rows render with no icon column indent?
-- **ContentPage + Markdown code block**: monospace, one control, true 2-D character canvas
-  (vertical bars, spectrogram — subsumes item 9). Unknowns: the refresh channel for content
-  (RaiseContentsChanged? per-body property change?), its ceiling in fps, flicker on update, and
-  whether the markdown renderer keeps up at 10–15 fps without tearing.
-- **Anything richer**: does the toolkit/host offer grids, images-as-content, details panes,
-  adaptive-card-like surfaces we could abuse? What do first-party extensions do for dense visuals?
-  Inventory what exists before inventing; document findings here or in a notes/rendering.md.
+- **Stacked-rows ListPage EQ: dead.** Hard-locked 44 px row pitch vs ~14-19 px of title ink →
+  dashed ribbons with a ~2:1 gap, plus an unremovable ~52 px icon indent. No host knob.
+- **Markdown code block: dead.** Full Markdig re-parse + RichTextBlock rebuild per frame, and the
+  host never sets a monospace `CodeBlockFontFamily`, so the "grid" may render proportional.
+- **Winner: `PlainTextContent` (`FontFamily.Monospace`) on a ContentPage** — host-guaranteed
+  Cascadia Mono/Consolas, repaint = one `TextBlock.Text` assignment, equal frames deduped both
+  sides of the COM boundary, ~20-24 fps ceiling (host-global 40 ms batch). Needs SDK 0.11 / host
+  CmdPal 0.11 — project bumped to SDK 0.11.260520004 and .NET 10 for it.
 
-**Design north star: classic Winamp.** Copy the iconic looks, feasibility-mapped to our
-character canvas:
+Shipped as `Pages/VisualizerCanvasPage.cs`: 20 vertical bars × 14 rows (lower-partial blocks,
+112 vertical steps), peak-hold caps (item 6), static frequency-axis footer; dock clicks and the
+top-level entry now land there. The v1 rows page survives behind the top-level item's context menu
+("Visualizer (rows)"), converted to `DynamicListPage` so palette typing can't fuzzy-scramble its
+rows. Verified live 2026-08-16: the canvas renders and animates correctly. Visual polish is
+deliberately deferred — "works, can look better" — tune geometry/density/decay when styles (#13)
+and color (#3) get built rather than iterating blind now.
 
-- **Spectrum analyzer** — vertical bars + slowly-falling peak caps (item 6). THE look; this is
-  what item 12 builds.
+**Design north star: classic Winamp.** The remaining looks, feasibility-mapped to the (now
+proven) character canvas:
+
+- **Spectrum analyzer** — vertical bars + slowly-falling peak caps (item 6). THE look — BUILT,
+  this is what `VisualizerCanvasPage` renders.
 - **Stereo mirror analyzer** — item 5's center-out L/R layout, same renderer.
 - **Oscilloscope** — the waveform line. Very Winamp, and cheap on data: SpectrumCapture's ring
   already holds the raw samples, it just doesn't expose them — add a `TryReadWaveform(float[])`
@@ -157,8 +160,8 @@ character canvas:
 - **Fire/gradient tints** — item 3's color work, within host limits (tags/icons, no text color).
 - **AVS / MilkDrop** — out of scope, we render text in a list host, not shaders. Don't try.
 
-Pick the winner by: looks right > refresh rate > code simplicity. The horizontal page stays until
-this lands.
+Pick the winner by: looks right > refresh rate > code simplicity. (The horizontal rows page is now
+the secondary entry; item 13's style setting decides whether it stays at all.)
 
 ## 13. Visualizer style switch in settings
 

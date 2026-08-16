@@ -11,12 +11,15 @@ public partial class VisualizerCommandsProvider : CommandProvider
     // live at once is the normal case) — see SpectrumSource.
     private readonly SpectrumSource _source = new();
 
-    // The band is the product; the page is where a click lands (the big in-palette visualizer),
-    // and it doubles as the extension's discoverable face in the palette root. Two bands while
-    // the TODO #4 spike runs: same spectrum through the block renderer (8 bars x 8 levels) and
-    // the braille renderer (22 bars x 4 levels) — pin both to compare readability at dock size;
-    // the loser (or a style setting, TODO #13) retires one.
-    private readonly VisualizerPage _page;
+    // The band is the product; the canvas page is where a click lands (the big in-palette
+    // vertical visualizer, TODO #12) and doubles as the extension's discoverable face in the
+    // palette root. The v1 rows page stays reachable from the top-level item's context menu until
+    // TODO #13's style setting decides its fate. Two bands while the TODO #4 spike runs: same
+    // spectrum through the block renderer (8 bars x 8 levels) and the braille renderer (22 bars
+    // x 4 levels) — pin both to compare readability at dock size; the loser (or a style setting,
+    // TODO #13) retires one.
+    private readonly VisualizerCanvasPage _canvasPage;
+    private readonly VisualizerPage _rowsPage;
     private readonly VisualizerDockBand _band;
     private readonly VisualizerDockBand _brailleBand;
 
@@ -29,25 +32,29 @@ public partial class VisualizerCommandsProvider : CommandProvider
         DisplayName = Resources.Extension_DisplayName;
         Icon = new IconInfo("\uE8D6"); // Segoe Audio glyph — replace with a PNG for the Store
 
-        _page = new VisualizerPage(_source);
+        _canvasPage = new VisualizerCanvasPage(_source);
+        _rowsPage = new VisualizerPage(_source);
         _band = new VisualizerDockBand(
             _source,
-            _page,
+            _canvasPage,
             new BlockBarsRenderer(),
             "com.costafotiadis.visualizer.dock.spectrum",
             Resources.Band_Title);
         _brailleBand = new VisualizerDockBand(
             _source,
-            _page,
+            _canvasPage,
             new BrailleBarsRenderer(),
             "com.costafotiadis.visualizer.dock.spectrum.braille",
             Resources.Band_Title_Braille);
 
         _commands = [
-            new CommandItem(_page)
+            new CommandItem(_canvasPage)
             {
                 Title = Resources.Command_Visualizer,
                 Subtitle = Resources.Command_Visualizer_Subtitle,
+                MoreCommands = [
+                    new CommandContextItem(_rowsPage) { Title = Resources.Command_Visualizer_Rows },
+                ],
             },
         ];
 
@@ -65,7 +72,8 @@ public partial class VisualizerCommandsProvider : CommandProvider
     {
         _band.Dispose();
         _brailleBand.Dispose();
-        _page.Dispose();
+        _canvasPage.Dispose();
+        _rowsPage.Dispose();
         _source.Dispose();
         base.Dispose();
         GC.SuppressFinalize(this);
