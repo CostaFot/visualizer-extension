@@ -1,7 +1,7 @@
 # Releasing
 
 Modeled on AgentsPanelExtension's `notes/releasing.md` (itself from MarketExtension's); see
-`notes/store-readiness.md` for the full release-prep checklist. Current version: **0.1.0.0**.
+`notes/store-readiness.md` for the full release-prep checklist. Current version: **1.0.0.0**.
 
 ## Version bump — all sites together, one dedicated commit
 
@@ -25,6 +25,14 @@ $files | ForEach-Object { (Get-Content $_) -replace '0\.1\.0\.0','<NEW>' | Set-C
 
 Also update the "Current version" line at the top of this file. Commit message = the version
 (e.g. `1.0.0.0`). Never amend.
+
+## Signing cert
+
+The repo reuses AgentsPanelExtension's self-signed cert (same Publisher CN,
+`CN=3D57AA92-97A9-42D2-8CB0-4207D9145514`) — local copy at `VisualizerExtension/signing.pfx`
+(git-ignored), secrets `SIGNING_CERT_PFX` + `SIGNING_CERT_PASSWORD` set on this repo. **Valid
+until 2027-08-14** — regenerate before then (`create-signing-cert.ps1`, or reuse whatever
+AgentsPanel regenerates to) and refresh the secrets in BOTH repos.
 
 ## Release (once the workflows land — E13/E14)
 

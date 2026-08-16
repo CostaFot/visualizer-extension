@@ -98,7 +98,7 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
         // the band.
         Id = id;
         Title = title;
-        Icon = new IconInfo("\uE8D6"); // Segoe Audio glyph — band icon in the dock's band manager
+        Icon = IconHelpers.FromRelativePath("Assets\\visualizer_logo_base_square.png"); // band icon in the dock's band manager
 
         // The one stable item = the one dock button. Icon blank on the plain bands so every pixel
         // of the ~100 DIP title budget goes to the bars (each renderer sizes itself to that

@@ -30,17 +30,31 @@ certification with the same value.
 
 ## A. Certification blockers — identity & branding
 
-- [ ] **A1 [user] Real app logo + MSIX asset regen.** The entire `Assets/` folder is byte-copied
+- [x] **A1 [user] Real app logo + MSIX asset regen.** *(done 2026-08-16 — AI-generated logo
+  (dark squircle, white spectrum bars, green `>_`); agent stripped the fake-checkerboard JPEG
+  background into a real-alpha master at `listing/visualizer_logo_1024.png` (1024 native, not
+  1280 — raw kept as `listing/base_logo_raw.jpg`); user regenerated `Assets/` via VS Manifest
+  Designer with padding OFF; git-ignored base copies (`LargeTile.png` …) refresh from scale-200
+  via the csproj `PrepareAssets` target. Only `LockScreenLogo.scale-200.png` remains inherited —
+  unreferenced, kept per G19.)* The entire `Assets/` folder is byte-copied
   AgentsPanelExtension placeholders — a blocker (two Store apps must not share an icon). Flow
   proven on AgentsPanel: create/park a 1280px master at `listing/visualizer_logo_1280.png` → VS
   Manifest Designer → Visual Assets → generate from the square source with **"Apply recommended
   padding" OFF** (already-padded art double-insets) → agent downsizes the in-package base copy to
   256px if oversized.
-- [ ] **A2 [agent] Wire the real logo in-app.** After A1, verify every in-CmdPal icon site
+- [x] **A2 [agent] Wire the real logo in-app.** *(done 2026-08-16 — added 256px
+  `Assets/visualizer_logo_base_square.png` (mirrors AgentsPanel's `agentspanel_logo_base_square`);
+  all four Segoe Audio glyph sites (provider, hub, canvas, band `CommandItem`) now use
+  `IconHelpers.FromRelativePath`; semantic glyphs (play, volume, settings gear) intentionally kept;
+  clean x64 build.)* After A1, verify every in-CmdPal icon site
   (extension entry, hub page, canvas page, band `CommandItem`s) references the new logo via
   `IconHelpers.FromRelativePath` and none still shows placeholder art. MSIX tile/Store assets and
   in-CmdPal icons are two separate systems (MarketExtension `notes/releasing.md` § Icons).
-- [ ] **A3 [user] Partner Center name reservation.** Reserve "Visualizer for Command Palette";
+- [x] **A3 [user] Partner Center name reservation.** *(done 2026-08-16 — "Visualizer for Command
+  Palette" reserved. ⚠️ Before F16: double-check Partner Center → Product identity shows
+  `Package/Identity/Name` = `CostaFotiadis.VisualizerforCommandPalette` — that exact value is in
+  `Package.appxmanifest` + csproj `AppxPackageIdentityName`; a mismatch fails the bundle upload.)*
+  Reserve "Visualizer for Command Palette";
   confirm the assigned `Identity Name` matches `CostaFotiadis.VisualizerforCommandPalette` in
   `Package.appxmanifest` + csproj `AppxPackageIdentityName`. Publisher CN already matches the
   account.
@@ -106,8 +120,10 @@ certification with the same value.
   platform configs are intentional; keep the preview `WindowsSdkPackageVersion` pin (both
   reference repos shipped on it). The ARM64-first alphabetical trap remains — `-p:Platform=x64`
   stays mandatory in every build.
-- [ ] **D12 [user] Pick the ship version.** Reference repos shipped at `1.0.0.0`; bump all three
-  sites in one dedicated commit (message = the version) as ship-order step 1.
+- [x] **D12 [user] Pick the ship version.** *(done 2026-08-16 — shipped-version pick `1.0.0.0`,
+  all three sites bumped in the dedicated commit, clean x64 build.)* Reference repos shipped at
+  `1.0.0.0`; bump all three sites in one dedicated commit (message = the version) as ship-order
+  step 1.
 
 ## E. Release infrastructure (copy from the reference repos, rename)
 
@@ -118,11 +134,21 @@ certification with the same value.
   bundle → signtool → GitHub Release) and `deploy-pages.yml` (for B4). `build-check.yml` already
   exists. Later, post-Store-approval: `update-winget.yml` from MarketExtension for repeat WinGet
   submissions.
-- [ ] **E14 [user] Signing cert + secrets.** Run `VisualizerExtension/create-signing-cert.ps1`
+- [x] **E14 [user] Signing cert + secrets.** *(done 2026-08-16 — reused AgentsPanelExtension's
+  signing.pfx per the script's own note (same Publisher CN); local git-ignored copy at
+  `VisualizerExtension/signing.pfx`; `SIGNING_CERT_PFX` + `SIGNING_CERT_PASSWORD` secrets set and
+  verified via `gh secret list`; cert valid until 2027-08-14, noted in `notes/releasing.md`;
+  backup = the existing AgentsPanel pfx + password. `WINGET_TOKEN` still pending — post-Store
+  approval, F17.)* Run `VisualizerExtension/create-signing-cert.ps1`
   (CN already matches the manifest), set `SIGNING_CERT_PFX` + `SIGNING_CERT_PASSWORD` repo
   secrets (none set as of the audit), back up the pfx + password (git-ignored). Cert expiry ~1
   year — note the re-run date. Later, for WinGet: `WINGET_TOKEN` (classic PAT, public_repo).
-- [ ] **E15 [user] Screenshots → `listing/`.** Framed-on-gradient like AgentsPanel's `listing/`:
+- [x] **E15 [user] Screenshots → `listing/`.** *(done 2026-08-16 — raws as `base_screenshot_*`,
+  framed-on-gradient `screenshot_*` (dock strips 7200×2400 3:1 ×3 styles, 16:9 canvas/scope/hub/
+  settings, band manager 2400²), plus Store-ready downscales in `listing/store/` (≤3840×2160:
+  dock 3840×1280, 16:9 3840×2160, bands 2160²) — Partner Center uploads come from `store/`, the
+  README uses the full-size set. Known nit: `screenshot_bands.png` clips the "Claude" row at the
+  top edge.)* Framed-on-gradient like AgentsPanel's `listing/`:
   the pinned dock band strip (hero, 3:1), the Dock band manager showing all three styles, the
   canvas page in bars style, the oscilloscope style, the hub page (16:9 Store-ready). Keep raw
   captures as `base_screenshot_*`. Store ceiling is 3840×2160 — downscale/pad the wide strip.

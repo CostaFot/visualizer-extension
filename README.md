@@ -3,9 +3,9 @@
 [![GitHub release](https://img.shields.io/github/v/release/CostaFot/visualizer-extension?style=flat-square&logo=github&label=release)](https://github.com/CostaFot/visualizer-extension/releases/latest)
 [![GitHub downloads](https://img.shields.io/github/downloads/CostaFot/visualizer-extension/total?style=flat-square&logo=github&label=downloads)](https://github.com/CostaFot/visualizer-extension/releases)
 
-<img src="listing/screenshot_dock.png" width="600"/>
+<img src="listing/screenshot_dock_default.png" width="600"/>
 
-A Windows 11 [Command Palette](https://learn.microsoft.com/en-us/windows/powertoys/command-palette/overview) extension that turns whatever your PC is playing into a live spectrum visualizer on the Command Palette dock.
+A Windows 11 [Command Palette](https://learn.microsoft.com/en-us/windows/powertoys/command-palette/overview) extension that adds a cool little visualizer on the Command Palette dock.
 
 ## Requirements
 [PowerToys](https://github.com/microsoft/PowerToys) 0.100 or later, with Command Palette enabled
@@ -36,31 +36,27 @@ Download the `.msixbundle` from the [latest release](https://github.com/CostaFot
 
 Three pinnable styles — block bars, braille, and bars with a VU-colored dot.
 
-<img src="listing/screenshot_bands.png" width="400"/>
+<img src="listing/screenshot_dock_all.png" width="400"/>
+<img src="listing/screenshot_dock_braille.png" width="400"/>
+<img src="listing/screenshot_dock_default.png" width="400"/>
 
 ### Canvas
 
-Click a band for the full in-palette visualizer — bars with peak caps or an oscilloscope, switchable in settings.
+Click a band for the full in-palette visualizer — switchable in settings.
 
 <img src="listing/screenshot_canvas_bars.png" width="500"/>
 
 <img src="listing/screenshot_oscilloscope.png" width="500"/>
 
-### Test signal
-
-**Test visualizer** plays a built-in tone sweep so you can see it work with nothing queued up.
-
-<img src="listing/screenshot_hub.png" width="500"/>
-
 ## FAQ
 
-**Does it use the microphone?**
+**Do you listen/record my microphone while I talk to my mom?**
 
-No. Loopback capture of your default output device — it only hears what your PC is already playing. Read the source code.
+Thrilling. No.
 
 **Some audio doesn't show up?**
 
-Exclusive-mode and DRM audio never reaches loopback. The visualizer follows your default output device.
+Exclusive-mode and DRM audio never reaches loopback.
 
 **Is there telemetry?**
 
