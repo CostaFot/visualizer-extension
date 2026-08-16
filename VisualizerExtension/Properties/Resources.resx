@@ -151,7 +151,7 @@
     <value>Test visualizer</value>
   </data>
   <data name="Action_PlayTestSignal_Subtitle" xml:space="preserve">
-    <value>Play a tone ladder and sweep that lights every bar in turn</value>
+    <value>Play an amazing sound that goes through all frequencies to try it out</value>
   </data>
   <data name="Unit_Hz" xml:space="preserve">
     <value>{0} Hz</value>

@@ -79,7 +79,7 @@ namespace VisualizerExtension.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Play a tone ladder and sweep that lights every bar in turn.
+        ///   Looks up a localized string similar to Play an amazing sound that goes through all frequencies to try it out.
         /// </summary>
         public static string Action_PlayTestSignal_Subtitle {
             get {
