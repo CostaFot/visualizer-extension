@@ -50,7 +50,11 @@ certification with the same value.
   (extension entry, hub page, canvas page, band `CommandItem`s) references the new logo via
   `IconHelpers.FromRelativePath` and none still shows placeholder art. MSIX tile/Store assets and
   in-CmdPal icons are two separate systems (MarketExtension `notes/releasing.md` § Icons).
-- [ ] **A3 [user] Partner Center name reservation.** Reserve "Visualizer for Command Palette";
+- [x] **A3 [user] Partner Center name reservation.** *(done 2026-08-16 — "Visualizer for Command
+  Palette" reserved. ⚠️ Before F16: double-check Partner Center → Product identity shows
+  `Package/Identity/Name` = `CostaFotiadis.VisualizerforCommandPalette` — that exact value is in
+  `Package.appxmanifest` + csproj `AppxPackageIdentityName`; a mismatch fails the bundle upload.)*
+  Reserve "Visualizer for Command Palette";
   confirm the assigned `Identity Name` matches `CostaFotiadis.VisualizerforCommandPalette` in
   `Package.appxmanifest` + csproj `AppxPackageIdentityName`. Publisher CN already matches the
   account.
