@@ -9,7 +9,8 @@ namespace VisualizerExtension;
 // The proper in-palette visualizer (TODO #12): a monospace character canvas with user-selectable
 // fill styles (TODO #13, read pull-style from VisualizerSettingsManager on every tick — a change
 // applies on the next frame, no restart): classic vertical spectrum bars with slowly-falling peak
-// caps (TODO #6), or a scrolling spectrogram waterfall (TODO #9). The canvas is a ContentPage
+// caps (TODO #6), a scrolling spectrogram waterfall (TODO #9), or a Winamp-style oscilloscope
+// trace (TODO #14). The canvas is a ContentPage
 // with ONE stable PlainTextContent — the host renders it in guaranteed monospace (Cascadia Mono/Consolas)
 // and a repaint is a single TextBlock.Text assignment, no parse and no element-tree rebuild. See
 // notes/rendering.md for why every alternative (stacked list rows, markdown code block, adaptive
@@ -60,6 +61,9 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
     private readonly float[] _history = new float[Rows * BandCount];
     private int _historyHead;
     private PageStyle _style = PageStyle.VerticalBars;
+
+    // Oscilloscope scratch: one waveform sample per canvas column, fully rewritten each tick.
+    private readonly float[] _waveform = new float[Columns];
 
     // Level 0..1 -> spectrogram cell intensity, blank through shades to full block
     // (U+2591 LIGHT / U+2592 MEDIUM / U+2593 DARK SHADE / U+2588 FULL BLOCK — built from char
@@ -117,9 +121,7 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
             _scratch[(row * LineLength) + Columns] = '\n';
         }
 
-        WriteAxisLabel(FormatFrequency(MinFrequency), 0f);
-        WriteAxisLabel(FormatFrequency(MathF.Sqrt(MinFrequency * MaxFrequency)), 0.5f);
-        WriteAxisLabel(FormatFrequency(MaxFrequency), 1f);
+        WriteAxis(_style);
 
         _baselineFrame = RenderCanvas();
         _lastFrame = _baselineFrame;
@@ -170,19 +172,29 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
     // RenderLoop tick — pool thread, exceptions handled by the loop.
     private bool RenderFrame()
     {
-        var hasAudio = _source.TryReadBands(_bands);
-
         // Pull-style settings read: a style change applies on this very frame.
         var style = VisualizerSettingsManager.Instance.PageStyle;
         if (style != _style)
         {
             _style = style;
             ResetRenderState();
+            WriteAxis(style);
         }
 
-        var frame = style == PageStyle.Spectrogram
-            ? RenderSpectrogram(hasAudio)
-            : RenderBars(hasAudio);
+        bool hasAudio;
+        string frame;
+        if (style == PageStyle.Oscilloscope)
+        {
+            hasAudio = _source.TryReadWaveform(_waveform);
+            frame = RenderOscilloscope(hasAudio);
+        }
+        else
+        {
+            hasAudio = _source.TryReadBands(_bands);
+            frame = style == PageStyle.Spectrogram
+                ? RenderSpectrogram(hasAudio)
+                : RenderBars(hasAudio);
+        }
 
         // Push-only-on-change: identical frames (settled silence) cost nothing cross-proc.
         if (!string.Equals(frame, _lastFrame, StringComparison.Ordinal))
@@ -252,6 +264,54 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
         }
 
         return new string(_scratch);
+    }
+
+    // The oscilloscope (TODO #14, from #12's Winamp north star): the newest ~21 ms of raw
+    // waveform (SpectrumSource.TryReadWaveform, one sample per canvas column) drawn as a
+    // connected trace on the same LED-matrix grid as the bars — each column lights its sample's
+    // cell plus the vertical run bridging to the previous column, because a bare one-cell-per-
+    // column plot shatters into confetti whenever the wave moves more than one row per column.
+    // Pen is the full block (Block Elements are the glyphs rendering.md verifies for this canvas;
+    // braille U+28xx is explicitly UNVERIFIED in Cascadia Mono — don't switch pens without
+    // measuring), unlit cells keep the faint U+00B7 "off LED" grid. Silence draws the flat
+    // centerline, which then dedupes to zero cross-proc cost.
+    private string RenderOscilloscope(bool hasAudio)
+    {
+        var previous = RowOfSample(hasAudio ? _waveform[0] : 0f);
+        for (var x = 0; x < Columns; x++)
+        {
+            var current = RowOfSample(hasAudio ? _waveform[x] : 0f);
+            var top = Math.Max(current, previous);
+            var bottom = Math.Min(current, previous);
+            for (var cell = 0; cell < Rows; cell++)
+            {
+                // cell counts from the bottom; the scratch is written top line first.
+                var offset = ((Rows - 1 - cell) * LineLength) + x;
+                _scratch[offset] = cell >= bottom && cell <= top ? (char)0x2588 : (char)0x00B7;
+            }
+
+            previous = current;
+        }
+
+        return new string(_scratch);
+    }
+
+    // Sample -1..1 -> cell row counted from the bottom (positive up).
+    private static int RowOfSample(float sample) =>
+        Math.Clamp((int)((sample + 1f) * 0.5f * Rows), 0, Rows - 1);
+
+    // (Re)writes the static footer line for the active style: the log frequency axis for the
+    // spectrum styles (bars and spectrogram share the band layout), blank for the oscilloscope
+    // (a time-domain trace has no frequency axis).
+    private void WriteAxis(PageStyle style)
+    {
+        Array.Fill(_scratch, ' ', Rows * LineLength, Columns);
+        if (style != PageStyle.Oscilloscope)
+        {
+            WriteAxisLabel(FormatFrequency(MinFrequency), 0f);
+            WriteAxisLabel(FormatFrequency(MathF.Sqrt(MinFrequency * MaxFrequency)), 0.5f);
+            WriteAxisLabel(FormatFrequency(MaxFrequency), 1f);
+        }
     }
 
     // Draws every bar into the scratch and snapshots it. The viewer's TextBlock has natural line

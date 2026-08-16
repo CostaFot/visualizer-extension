@@ -45,14 +45,19 @@ is measured and documented in `notes/rendering.md`; consult it before inventing 
   action. TWO bands are registered permanently — block bars (8×8) and braille (22×4): the user
   picks the dock style by pinning either or both from the Dock's band manager (TODO #4 verdict —
   dock styles are bands, not settings; future dock renderers just add bands).
-- `Pages/VisualizerCanvasPage.cs` — THE in-palette visualizer and the top-level palette entry
+- `Pages/VisualizerHubPage.cs` — the top-level palette entry: a static `ListPage` menu (mirrors
+  AgentsPanelExtension's UsagePage shape, minus the live state) listing the canvas, the rows
+  page, the volume mixer, and the settings form. No lifecycle, no lease — pages acquire their
+  own when opened.
+- `Pages/VisualizerCanvasPage.cs` — THE in-palette visualizer
   (TODO #12): a `ContentPage` holding one stable `PlainTextContent`
   (`FontFamily.Monospace` — host-guaranteed Cascadia Mono/Consolas), drawn as a 2-D character
-  canvas with a static frequency-axis footer and two fill styles read pull-style from settings on
-  every tick (#13): **vertical bars** — 20 bars × 14 rows (lower-partial blocks U+2581..U+2588 =
-  112 vertical steps, spaces are grid-safe in monospace) with peak-hold caps (U+2594,
-  hold-then-fall — #6) — and **spectrogram** (#9) — rows = time scrolling up, shade-ramp
-  intensity, instantaneous levels. Frames mutate `_content.Text` only (push-only-on-change);
+  canvas with a static per-style footer (frequency axis; blank for the scope) and three fill
+  styles read pull-style from settings on every tick (#13): **vertical bars** — 20 bars × 14 rows
+  (lower-partial blocks U+2581..U+2588 = 112 vertical steps, spaces are grid-safe in monospace)
+  with peak-hold caps (U+2594, hold-then-fall — #6) — **spectrogram** (#9) — rows = time
+  scrolling up, shade-ramp intensity, instantaneous levels — and **oscilloscope** (#14) — the
+  newest ~21 ms of raw waveform (`TryReadWaveform`) as a blocks-pen connected trace. Frames mutate `_content.Text` only (push-only-on-change);
   `ItemsChanged` is never raised — on content pages it rebuilds the whole content control.
 - `Settings/VisualizerSettingsManager.cs` — JsonSettingsManager singleton (mirrors
   AgentsPanelExtension's UsageSettingsManager; persists to `visualizer.settings.json`), surfaced
@@ -80,8 +85,8 @@ is measured and documented in `notes/rendering.md`; consult it before inventing 
   returns false), never something to block on. On `COMException` (device change) the loop tears
   down and rebinds after 500 ms. Constructor starts the thread, `Dispose` stops it — only
   `SpectrumSource` creates/disposes it.
-- `VisualizerCommandsProvider.cs` — wires source → page → band; one top-level `CommandItem`
-  opening the page + one dock band. Provider `Dispose` disposes band, page, then source.
+- `VisualizerCommandsProvider.cs` — wires source → pages → bands; one top-level `CommandItem`
+  opening the hub + the two dock bands. Provider `Dispose` disposes bands, pages, then source.
 - Deliberately **NO Rx** anywhere (the visualizer avoids the whole
   Rx-gate↔STA deadlock class — keep it that way) and no settings yet (bar count / fps / idle
   behavior are a planned CmdPal settings page, see the plan note).
@@ -165,9 +170,10 @@ CmdPal-rendering-limits investigation (`notes/rendering.md`) and the vertical
 `VisualizerCanvasPage` with peak caps it produced (TODO #12 + #6, verified live 2026-08-16;
 visual polish deferred to the #3-era work); the braille dock band (#4 — verdict: both bands stay,
 pinning IS the dock style picker); the settings scaffold + page-style switch (#13) with the
-spectrogram style (#9).
-**Next up: `notes/TODO.md`** — headline items: color exploration (#3), stereo mirror (#5),
-oscilloscope (needs `TryReadWaveform`, see #12's north star). Also still open, from
+spectrogram style (#9); the oscilloscope page style (#14 — `TryReadWaveform` on the capture +
+a blocks-pen connected trace, braille pen deliberately skipped as unverified in Cascadia Mono).
+**Next up: `notes/TODO.md`** — headline items: color exploration (#3), stereo mirror (#5).
+Also still open, from
 `notes/visualizer-extension-plan.md` Step 4: more settings (bar count, target fps, decay, idle
 behavior), Tier-1 peak-meter low-power mode as a settings choice, real PNG logo assets (current
 `Assets/` PNGs are placeholders copied from AgentsPanelExtension — replace before any release),

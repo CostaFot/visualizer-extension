@@ -115,6 +115,33 @@ namespace VisualizerExtension.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Open visualizer.
+        /// </summary>
+        public static string Hub_OpenVisualizer {
+            get {
+                return ResourceManager.GetString("Hub_OpenVisualizer", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Visualizer settings.
+        /// </summary>
+        public static string Command_Settings {
+            get {
+                return ResourceManager.GetString("Command_Settings", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Change how the visualizer page draws.
+        /// </summary>
+        public static string Command_Settings_Subtitle {
+            get {
+                return ResourceManager.GetString("Command_Settings_Subtitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Pin the Visualizer band via the Dock's band manager to see your audio dance.
         /// </summary>
         public static string Command_Visualizer_Subtitle {
@@ -165,6 +192,15 @@ namespace VisualizerExtension.Properties {
         public static string Settings_PageStyle_Spectrogram {
             get {
                 return ResourceManager.GetString("Settings_PageStyle_Spectrogram", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Oscilloscope.
+        /// </summary>
+        public static string Settings_PageStyle_Oscilloscope {
+            get {
+                return ResourceManager.GetString("Settings_PageStyle_Oscilloscope", resourceCulture);
             }
         }
 

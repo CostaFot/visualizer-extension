@@ -188,7 +188,33 @@ restart. Same toolkit quirk as the reference repo: the visible field label comes
 
 - **Dock style needs NO setting** — item 4's verdict: each dock style is its own registered band
   and the user pins the ones they want; future dock renderers just add bands.
-- Future styles (oscilloscope — needs `TryReadWaveform`, see item 12's north star; a canvas
-  horizontal-bars mode; stereo mirror, item 5) just extend the choice list + add a render method.
+- Future styles (oscilloscope — DONE, item 14; a canvas horizontal-bars mode; stereo mirror,
+  item 5) just extend the choice list + add a render method.
 - Still open from the original plan's Step 4: settings for bar count / fps / decay / idle
   behavior / colors (item 3) — the settings scaffold they'll live in now exists.
+
+## 14. ~~Oscilloscope page style~~ DONE 2026-08-16 (verified live same day)
+
+The Winamp waveform trace from item 12's north star, shipped as the third item-13 page style,
+alongside the hub page restructure (single top-level entry → static ListPage menu: canvas, rows,
+volume mixer, settings — mirroring AgentsPanelExtension's UsagePage).
+Data side: `SpectrumCapture.TryReadWaveform(float[])` — the ring already held the raw samples —
+decimates the newest 1024 samples (~21 ms at 48 kHz, a Winamp-ish scope span) into one value per
+canvas column via **signed peak per chunk** (averaging ~17 samples would low-pass the trace and
+flatten drums to a resting line), then applies its own slow auto-gain — linear and
+sign-preserving, unlike the bands' sqrt (a scope trace must not be loudness-warped). Same
+"no packet in 250 ms" silence contract; exposed through `SpectrumSource` under the same
+single-reader gate.
+
+Render side: `RenderOscilloscope` in `VisualizerCanvasPage` draws a connected trace on the same
+LED-matrix grid as the bars — each of the 59 columns lights its sample's cell (full block) plus
+the vertical run bridging to the previous column (a bare one-cell-per-column plot shatters into
+confetti when the wave moves more than one row per column); unlit cells keep the U+00B7 "off LED"
+grid. Silence renders the flat centerline, which dedupes to zero cross-proc cost. The static
+footer is now per-style (`WriteAxis`): frequency labels for bars/spectrogram, blank for the
+scope (a time-domain trace has no frequency axis).
+
+**Pen decision:** blocks, not braille — `notes/rendering.md` verifies Block Elements coverage in
+Cascadia Mono/Consolas but flags braille U+28xx as UNVERIFIED there, and the viewer's row seams
+make the canvas discrete anyway. If braille ever gets measured and covered, a higher-res scope
+pen is a drop-in change to `RenderOscilloscope`.

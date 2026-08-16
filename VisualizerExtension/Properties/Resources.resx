@@ -70,6 +70,15 @@
   <data name="Command_Visualizer_Rows" xml:space="preserve">
     <value>Visualizer (rows)</value>
   </data>
+  <data name="Hub_OpenVisualizer" xml:space="preserve">
+    <value>Open visualizer</value>
+  </data>
+  <data name="Command_Settings" xml:space="preserve">
+    <value>Visualizer settings</value>
+  </data>
+  <data name="Command_Settings_Subtitle" xml:space="preserve">
+    <value>Change how the visualizer page draws</value>
+  </data>
   <data name="Band_Title" xml:space="preserve">
     <value>Visualizer</value>
   </data>
@@ -99,6 +108,9 @@
   </data>
   <data name="Settings_PageStyle_Spectrogram" xml:space="preserve">
     <value>Scrolling spectrogram</value>
+  </data>
+  <data name="Settings_PageStyle_Oscilloscope" xml:space="preserve">
+    <value>Oscilloscope</value>
   </data>
   <data name="DirectLaunch_Message" xml:space="preserve">
     <value>{0} is a background extension for PowerToys Command Palette — there is nothing to launch directly. Open Command Palette and search for "{1}", or pin the Visualizer band in the Dock.</value>

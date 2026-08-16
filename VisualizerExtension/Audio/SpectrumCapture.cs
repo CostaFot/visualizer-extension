@@ -22,6 +22,7 @@ internal sealed unsafe partial class SpectrumCapture : IDisposable
     private const float MaxFrequency = 16000f;
     private const int SilenceTimeoutMilliseconds = 250;
     private const float GainDecayPerFrame = 0.995f;
+    private const int WaveformWindow = 1024; // newest ~21 ms at 48 kHz — a Winamp-ish scope span
 
     private const uint ClsContextAll = 0x17;
     private const uint StreamFlagsLoopback = 0x00020000;
@@ -60,6 +61,7 @@ internal sealed unsafe partial class SpectrumCapture : IDisposable
     private volatile int _sampleRate = 48000;
     private volatile bool _stop;
     private float _gain = 1e-4f;
+    private float _waveformGain = 1e-4f;
 
     public SpectrumCapture()
     {
@@ -125,6 +127,54 @@ internal sealed unsafe partial class SpectrumCapture : IDisposable
         for (var k = 0; k < bands.Length; k++)
         {
             bands[k] = MathF.Sqrt(Math.Clamp(bands[k] / this._gain, 0f, 1f));
+        }
+
+        return true;
+    }
+
+    // Fills `samples` with a decimated snapshot of the newest WaveformWindow ring samples
+    // (oldest first, auto-gained to -1..1) for the oscilloscope trace. Same silence contract as
+    // TryReadBands; single-reader for the same reason (_waveformGain is unguarded).
+    public bool TryReadWaveform(float[] samples)
+    {
+        if (Environment.TickCount64 - Volatile.Read(ref this._lastPacketTicks) > SilenceTimeoutMilliseconds)
+        {
+            return false;
+        }
+
+        var frameMax = 1e-6f;
+        lock (this._gate)
+        {
+            // The window is the ring slice ending at _ringPos (the newest sample is one behind
+            // it); negative indices wrap via the power-of-two mask.
+            var start = this._ringPos - WaveformWindow;
+            var chunk = (float)WaveformWindow / samples.Length;
+            for (var i = 0; i < samples.Length; i++)
+            {
+                // Signed peak per chunk, not the mean — averaging ~17 samples would low-pass the
+                // trace and flatten drums/hi-hats to a resting line.
+                var peak = 0f;
+                var hi = start + (int)((i + 1) * chunk);
+                for (var s = start + (int)(i * chunk); s < hi; s++)
+                {
+                    var v = this._ring[s & (FftSize - 1)];
+                    if (MathF.Abs(v) > MathF.Abs(peak))
+                    {
+                        peak = v;
+                    }
+                }
+
+                samples[i] = peak;
+                frameMax = MathF.Max(frameMax, MathF.Abs(peak));
+            }
+        }
+
+        // Same slow auto-gain idea as the bands (loopback amplitude tracks system volume), but
+        // linear and sign-preserving — a scope trace must not be sqrt-warped.
+        this._waveformGain = MathF.Max(this._waveformGain * GainDecayPerFrame, frameMax);
+        for (var i = 0; i < samples.Length; i++)
+        {
+            samples[i] = Math.Clamp(samples[i] / this._waveformGain, -1f, 1f);
         }
 
         return true;

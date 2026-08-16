@@ -12,6 +12,7 @@ internal enum PageStyle
 {
     VerticalBars,
     Spectrogram,
+    Oscilloscope,
 }
 
 // Extension settings, surfaced in Command Palette's Settings UI and persisted to
@@ -31,6 +32,7 @@ internal sealed class VisualizerSettingsManager : JsonSettingsManager
 
     private const string PageStyleBars = "bars";
     private const string PageStyleSpectrogram = "spectrogram";
+    private const string PageStyleOscilloscope = "oscilloscope";
 
     // First choice is the default (ChoiceSetSetting takes choices[0].Value as its default).
     private readonly ChoiceSetSetting _pageStyle = new(
@@ -38,6 +40,7 @@ internal sealed class VisualizerSettingsManager : JsonSettingsManager
         [
             new ChoiceSetSetting.Choice(Resources.Settings_PageStyle_Bars, PageStyleBars),
             new ChoiceSetSetting.Choice(Resources.Settings_PageStyle_Spectrogram, PageStyleSpectrogram),
+            new ChoiceSetSetting.Choice(Resources.Settings_PageStyle_Oscilloscope, PageStyleOscilloscope),
         ])
     {
         Label = Resources.Settings_PageStyle_Label,
@@ -46,8 +49,12 @@ internal sealed class VisualizerSettingsManager : JsonSettingsManager
     };
 
     // The canvas fill style; unknown/legacy persisted values fall back to bars.
-    public PageStyle PageStyle =>
-        _pageStyle.Value == PageStyleSpectrogram ? PageStyle.Spectrogram : PageStyle.VerticalBars;
+    public PageStyle PageStyle => _pageStyle.Value switch
+    {
+        PageStyleSpectrogram => PageStyle.Spectrogram,
+        PageStyleOscilloscope => PageStyle.Oscilloscope,
+        _ => PageStyle.VerticalBars,
+    };
 
     private VisualizerSettingsManager()
     {

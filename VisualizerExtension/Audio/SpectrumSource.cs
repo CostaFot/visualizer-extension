@@ -9,10 +9,11 @@ namespace VisualizerExtension;
 // becoming visible and dispose the lease on hiding, so a fully hidden visualizer still costs
 // nothing.
 //
-// TryReadBands is serialized under the gate because SpectrumCapture reuses its FFT scratch
-// buffers across calls — two concurrent readers would corrupt each other. The FFT is microseconds
-// at 2048 samples, so the lock is cheap. Callers may pass band arrays of different lengths; each
-// call computes its own folding.
+// The read methods are serialized under the gate because SpectrumCapture assumes a single
+// reader (TryReadBands reuses FFT scratch buffers, both readers mutate their auto-gain) — two
+// concurrent readers would corrupt each other. The work is microseconds at 2048 samples, so the
+// lock is cheap. Callers may pass arrays of different lengths; each call computes its own
+// folding/decimation.
 internal sealed class SpectrumSource : IDisposable
 {
     private readonly object _gate = new();
@@ -43,6 +44,15 @@ internal sealed class SpectrumSource : IDisposable
         lock (_gate)
         {
             return _capture?.TryReadBands(bands) ?? false;
+        }
+    }
+
+    // Latest waveform snapshot (-1..1, oldest first); same contract as TryReadBands.
+    public bool TryReadWaveform(float[] samples)
+    {
+        lock (_gate)
+        {
+            return _capture?.TryReadWaveform(samples) ?? false;
         }
     }
 
