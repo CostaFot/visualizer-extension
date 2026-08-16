@@ -1,5 +1,11 @@
 # Music Visualizer Extension — build plan (handoff doc)
 
+> **HISTORICAL RECORD ONLY (kept for the spike history and gotcha back-story).** The plan was
+> executed: this repo IS the extension it describes, and the project was declared
+> feature-complete 2026-08-16 — the TODO list was closed out and deleted, and everything still
+> open here (Step 4 settings, SMTC ideas, Tier-1 mode switch) is cancelled, not pending. Current
+> truth lives in `AGENTS.md`; nothing below is a work item.
+
 > **For a future Claude session.** This file contains everything needed to build a standalone
 > "music visualizer in the CmdPal Dock" extension in a NEW repo. It was written 2026-08-15 after a
 > successful spike in THIS repo (agents-panel-extension, used only as a testbed — the spike code

@@ -70,6 +70,24 @@ namespace VisualizerExtension.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Test visualizer.
+        /// </summary>
+        public static string Action_PlayTestSignal {
+            get {
+                return ResourceManager.GetString("Action_PlayTestSignal", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Play a tone ladder and sweep that lights every bar in turn.
+        /// </summary>
+        public static string Action_PlayTestSignal_Subtitle {
+            get {
+                return ResourceManager.GetString("Action_PlayTestSignal_Subtitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Visualizer.
         /// </summary>
         public static string Band_Title {
@@ -79,11 +97,56 @@ namespace VisualizerExtension.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Visualizer (braille).
+        /// </summary>
+        public static string Band_Title_Braille {
+            get {
+                return ResourceManager.GetString("Band_Title_Braille", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Visualizer (blocks + VU).
+        /// </summary>
+        public static string Band_Title_Vu {
+            get {
+                return ResourceManager.GetString("Band_Title_Vu", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Visualizer.
         /// </summary>
         public static string Command_Visualizer {
             get {
                 return ResourceManager.GetString("Command_Visualizer", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open visualizer.
+        /// </summary>
+        public static string Hub_OpenVisualizer {
+            get {
+                return ResourceManager.GetString("Hub_OpenVisualizer", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Visualizer settings.
+        /// </summary>
+        public static string Command_Settings {
+            get {
+                return ResourceManager.GetString("Command_Settings", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Change how the visualizer page draws.
+        /// </summary>
+        public static string Command_Settings_Subtitle {
+            get {
+                return ResourceManager.GetString("Command_Settings_Subtitle", resourceCulture);
             }
         }
 
@@ -102,6 +165,60 @@ namespace VisualizerExtension.Properties {
         public static string DirectLaunch_Message {
             get {
                 return ResourceManager.GetString("DirectLaunch_Message", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Page style.
+        /// </summary>
+        public static string Settings_PageStyle_Label {
+            get {
+                return ResourceManager.GetString("Settings_PageStyle_Label", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Visualizer page style.
+        /// </summary>
+        public static string Settings_PageStyle_Desc {
+            get {
+                return ResourceManager.GetString("Settings_PageStyle_Desc", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Vertical bars with peak caps.
+        /// </summary>
+        public static string Settings_PageStyle_Bars {
+            get {
+                return ResourceManager.GetString("Settings_PageStyle_Bars", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Oscilloscope.
+        /// </summary>
+        public static string Settings_PageStyle_Oscilloscope {
+            get {
+                return ResourceManager.GetString("Settings_PageStyle_Oscilloscope", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Hz.
+        /// </summary>
+        public static string Unit_Hz {
+            get {
+                return ResourceManager.GetString("Unit_Hz", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} kHz.
+        /// </summary>
+        public static string Unit_kHz {
+            get {
+                return ResourceManager.GetString("Unit_kHz", resourceCulture);
             }
         }
 
