@@ -70,6 +70,24 @@ namespace VisualizerExtension.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Test visualizer.
+        /// </summary>
+        public static string Action_PlayTestSignal {
+            get {
+                return ResourceManager.GetString("Action_PlayTestSignal", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Play a tone ladder and sweep that lights every bar in turn.
+        /// </summary>
+        public static string Action_PlayTestSignal_Subtitle {
+            get {
+                return ResourceManager.GetString("Action_PlayTestSignal_Subtitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Visualizer.
         /// </summary>
         public static string Band_Title {

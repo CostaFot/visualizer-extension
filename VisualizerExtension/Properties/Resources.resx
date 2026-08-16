@@ -88,6 +88,12 @@
   <data name="Action_OpenVolumeMixer" xml:space="preserve">
     <value>Open volume mixer</value>
   </data>
+  <data name="Action_PlayTestSignal" xml:space="preserve">
+    <value>Test visualizer</value>
+  </data>
+  <data name="Action_PlayTestSignal_Subtitle" xml:space="preserve">
+    <value>Play a tone ladder and sweep that lights every bar in turn</value>
+  </data>
   <data name="Unit_Hz" xml:space="preserve">
     <value>{0} Hz</value>
   </data>

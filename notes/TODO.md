@@ -133,12 +133,12 @@ renderers can use: flash/pulse the item icon, or key item 3's color shifts to be
 peaks. Keep it strictly derived from the already-captured spectrum — no extra audio work on the
 render tick.
 
-## 8. Battery-aware throttle
+## 8. ~~Battery-aware throttle~~ CANCELLED 2026-08-16 (user's call — not doing it)
 
-On DC power, cap the active rate (e.g. 15 → 10 fps) via `Windows.System.Power.PowerManager`
-(WinRT, no extra deps; subscribe to `PowerSupplyStatusChanged`, read pull-style on the tick).
-Fits the "a pinned band must not burn CPU all day" philosophy; combine with the existing idle
-throttle rather than adding a second timer-juggling path.
+Was: on DC power, cap the active rate (e.g. 15 → 10 fps) via `Windows.System.Power.PowerManager`
+(subscribe to `PowerSupplyStatusChanged`, read pull-style on the tick), combined with the existing
+idle throttle. Dropped without building — the idle throttle alone covers the "pinned band must not
+burn CPU all day" concern. Don't re-propose.
 
 ## 9. ~~Scrolling spectrogram view~~ REMOVED 2026-08-16 (shipped and cut the same day)
 
@@ -155,14 +155,19 @@ any release): a mark that is literally a green→red spectrum of bars doubles as
 Store tile, and the eventual settings-page icon. One SVG master → export the full
 scale/targetsize PNG matrix the manifest expects.
 
-## 11. Built-in self-test using tools/spectrum-test.wav
+## 11. ~~Built-in self-test using tools/spectrum-test.wav~~ DONE 2026-08-16 (verified live same day)
 
-The test signal (born 2026-08-16 while verifying the item-1 fix) could ship in the app: a
-"Test visualizer" command (top-level or right-click MoreCommands) that plays the tone-ladder +
-sweep through the default output so users can see every bar respond without hunting for music.
-Needs the wav packaged as Content (csproj currently only includes Assets/**/*.png) or synthesized
-at runtime (the generator math is ~40 lines, see tools/generate-spectrum-test.ps1). Pure
-visualizer scope — it plays a local file, no media integration.
+Shipped as a "Test visualizer" command surfaced in BOTH proposed spots: a hub-page row and a
+`CommandContextItem` in every dock band's right-click menu (invoking from the dock runs in place —
+the user watches the band respond). Of the item's two delivery options, it **synthesizes at
+runtime** (`Audio/TestSignal.cs` — the ps1 generator math ported: 8 geometric band-center tones ×
+1.2 s + the 8 s phase-accumulated log sweep, 20 ms fades, 16-bit mono 44.1 kHz WAV baked lazily
+once, ~1.5 MB cached) rather than packaging the wav — nothing new in the MSIX and the signal can't
+drift from the code. Playback: `Commands/PlayTestSignalCommand.cs` via WinRT
+`Windows.Media.Playback.MediaPlayer` from an `InMemoryRandomAccessStream` (dependency-free, no UI
+affinity); one process-wide player behind a gate, so re-invoking mid-signal restarts instead of
+layering. `tools/generate-spectrum-test.ps1` stays as the dev-side generator — keep its math in
+sync with `TestSignal` if band layout ever changes.
 
 ## 12. ~~Proper VERTICAL visualizer in the page~~ DONE 2026-08-16 (canvas shipped; more styles → #13)
 

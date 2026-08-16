@@ -110,7 +110,10 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
             Title = renderer.Baseline,
             Subtitle = string.Empty,
             Icon = vuDot ? VuDotIcons.Icon(0) : new IconInfo(string.Empty),
-            MoreCommands = [new CommandContextItem(new OpenVolumeMixerCommand())],
+            MoreCommands = [
+                new CommandContextItem(new PlayTestSignalCommand()),
+                new CommandContextItem(new OpenVolumeMixerCommand()),
+            ],
         };
         _items = [_visualizerItem];
     }
