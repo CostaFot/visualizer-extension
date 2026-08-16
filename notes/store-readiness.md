@@ -130,7 +130,12 @@ certification with the same value.
   bundle → signtool → GitHub Release) and `deploy-pages.yml` (for B4). `build-check.yml` already
   exists. Later, post-Store-approval: `update-winget.yml` from MarketExtension for repeat WinGet
   submissions.
-- [ ] **E14 [user] Signing cert + secrets.** Run `VisualizerExtension/create-signing-cert.ps1`
+- [x] **E14 [user] Signing cert + secrets.** *(done 2026-08-16 — reused AgentsPanelExtension's
+  signing.pfx per the script's own note (same Publisher CN); local git-ignored copy at
+  `VisualizerExtension/signing.pfx`; `SIGNING_CERT_PFX` + `SIGNING_CERT_PASSWORD` secrets set and
+  verified via `gh secret list`; cert valid until 2027-08-14, noted in `notes/releasing.md`;
+  backup = the existing AgentsPanel pfx + password. `WINGET_TOKEN` still pending — post-Store
+  approval, F17.)* Run `VisualizerExtension/create-signing-cert.ps1`
   (CN already matches the manifest), set `SIGNING_CERT_PFX` + `SIGNING_CERT_PASSWORD` repo
   secrets (none set as of the audit), back up the pfx + password (git-ignored). Cert expiry ~1
   year — note the re-run date. Later, for WinGet: `WINGET_TOKEN` (classic PAT, public_repo).
