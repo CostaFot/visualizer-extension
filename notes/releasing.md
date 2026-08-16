@@ -1,7 +1,7 @@
 # Releasing
 
 Modeled on AgentsPanelExtension's `notes/releasing.md` (itself from MarketExtension's); see
-`notes/store-readiness.md` for the full release-prep checklist. Current version: **0.1.0.0**.
+`notes/store-readiness.md` for the full release-prep checklist. Current version: **1.0.0.0**.
 
 ## Version bump — all sites together, one dedicated commit
 

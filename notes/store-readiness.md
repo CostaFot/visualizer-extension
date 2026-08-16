@@ -116,8 +116,10 @@ certification with the same value.
   platform configs are intentional; keep the preview `WindowsSdkPackageVersion` pin (both
   reference repos shipped on it). The ARM64-first alphabetical trap remains — `-p:Platform=x64`
   stays mandatory in every build.
-- [ ] **D12 [user] Pick the ship version.** Reference repos shipped at `1.0.0.0`; bump all three
-  sites in one dedicated commit (message = the version) as ship-order step 1.
+- [x] **D12 [user] Pick the ship version.** *(done 2026-08-16 — shipped-version pick `1.0.0.0`,
+  all three sites bumped in the dedicated commit, clean x64 build.)* Reference repos shipped at
+  `1.0.0.0`; bump all three sites in one dedicated commit (message = the version) as ship-order
+  step 1.
 
 ## E. Release infrastructure (copy from the reference repos, rename)
 

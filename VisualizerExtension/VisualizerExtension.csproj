@@ -11,7 +11,7 @@
 
     <AppxPackageIdentityName>CostaFotiadis.VisualizerforCommandPalette</AppxPackageIdentityName>
     <AppxPackagePublisher>CN=3D57AA92-97A9-42D2-8CB0-4207D9145514</AppxPackagePublisher>
-    <AppxPackageVersion>0.1.0.0</AppxPackageVersion>
+    <AppxPackageVersion>1.0.0.0</AppxPackageVersion>
     <Version>$(AppxPackageVersion)</Version>
     <Company>Costa Fotiadis</Company>
     <Product>Visualizer for Command Palette</Product>
