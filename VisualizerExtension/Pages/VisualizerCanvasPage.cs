@@ -100,7 +100,7 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
         _source = source;
         Id = "com.costafotiadis.visualizer.page.canvas";
         Title = Resources.Command_Visualizer;
-        Icon = new IconInfo("\uE8D6"); // Segoe Audio glyph
+        Icon = IconHelpers.FromRelativePath("Assets\\visualizer_logo_base_square.png");
 
         // Newlines are fixed; the axis line (min / geometric-center / max frequency) is static.
         Array.Fill(_scratch, ' ');

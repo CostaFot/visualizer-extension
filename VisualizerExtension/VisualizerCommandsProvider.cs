@@ -31,7 +31,7 @@ public partial class VisualizerCommandsProvider : CommandProvider
     {
         Id = "com.costafotiadis.visualizer";
         DisplayName = Resources.Extension_DisplayName;
-        Icon = new IconInfo("\uE8D6"); // Segoe Audio glyph — replace with a PNG for the Store
+        Icon = IconHelpers.FromRelativePath("Assets\\visualizer_logo_base_square.png");
 
         // Surface the extension's settings (page style) in the Command Palette
         // Settings UI. See Settings/VisualizerSettingsManager.cs.

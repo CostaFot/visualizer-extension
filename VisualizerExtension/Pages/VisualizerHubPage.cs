@@ -18,7 +18,7 @@ internal sealed partial class VisualizerHubPage : ListPage
     {
         Id = "com.costafotiadis.visualizer.page.hub";
         Title = Resources.Command_Visualizer;
-        Icon = new IconInfo("\uE8D6"); // Segoe Audio glyph
+        Icon = IconHelpers.FromRelativePath("Assets\\visualizer_logo_base_square.png");
 
         _items = [
             new ListItem(canvasPage) { Title = Resources.Hub_OpenVisualizer },

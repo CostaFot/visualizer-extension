@@ -30,13 +30,23 @@ certification with the same value.
 
 ## A. Certification blockers — identity & branding
 
-- [ ] **A1 [user] Real app logo + MSIX asset regen.** The entire `Assets/` folder is byte-copied
+- [x] **A1 [user] Real app logo + MSIX asset regen.** *(done 2026-08-16 — AI-generated logo
+  (dark squircle, white spectrum bars, green `>_`); agent stripped the fake-checkerboard JPEG
+  background into a real-alpha master at `listing/visualizer_logo_1024.png` (1024 native, not
+  1280 — raw kept as `listing/base_logo_raw.jpg`); user regenerated `Assets/` via VS Manifest
+  Designer with padding OFF; git-ignored base copies (`LargeTile.png` …) refresh from scale-200
+  via the csproj `PrepareAssets` target. Only `LockScreenLogo.scale-200.png` remains inherited —
+  unreferenced, kept per G19.)* The entire `Assets/` folder is byte-copied
   AgentsPanelExtension placeholders — a blocker (two Store apps must not share an icon). Flow
   proven on AgentsPanel: create/park a 1280px master at `listing/visualizer_logo_1280.png` → VS
   Manifest Designer → Visual Assets → generate from the square source with **"Apply recommended
   padding" OFF** (already-padded art double-insets) → agent downsizes the in-package base copy to
   256px if oversized.
-- [ ] **A2 [agent] Wire the real logo in-app.** After A1, verify every in-CmdPal icon site
+- [x] **A2 [agent] Wire the real logo in-app.** *(done 2026-08-16 — added 256px
+  `Assets/visualizer_logo_base_square.png` (mirrors AgentsPanel's `agentspanel_logo_base_square`);
+  all four Segoe Audio glyph sites (provider, hub, canvas, band `CommandItem`) now use
+  `IconHelpers.FromRelativePath`; semantic glyphs (play, volume, settings gear) intentionally kept;
+  clean x64 build.)* After A1, verify every in-CmdPal icon site
   (extension entry, hub page, canvas page, band `CommandItem`s) references the new logo via
   `IconHelpers.FromRelativePath` and none still shows placeholder art. MSIX tile/Store assets and
   in-CmdPal icons are two separate systems (MarketExtension `notes/releasing.md` § Icons).
