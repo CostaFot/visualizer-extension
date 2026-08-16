@@ -4,22 +4,17 @@ Recorded 2026-08-16 after the first live deploy of the scaffold. Items 1–3 are
 annoyances; 4–10 came from the same day's brainstorm. Scope guard: this is NOT a media-player app
 (see AGENTS.md) — nothing here may grow SMTC/now-playing/track-control features.
 
-## 1. Visual bug: three dots ("…") at the end of the dock visualizer
+## 1. ~~Visual bug: three dots ("…") at the end of the dock visualizer~~ FIXED 2026-08-16
 
-Observed live: the band's button shows the 10 bars followed by what looks like three dots.
-Almost certainly the host's text **ellipsis**: the dock title is 12px with `MaxWidth=100` and
-trims with `…` when it doesn't fit (`DockItemControl.xaml`), so 10 block glyphs at whatever width
-the fallback font gives them is apparently just over the 100 DIP budget — the trimmed tail renders
-as the dots. Related to the plan's open "width jitter" check (block glyphs may not be rendering
-from a fixed-width font run).
+It was the host's `CharacterEllipsis` trimming, exactly as suspected. Root cause, measured
+(GlyphTypeface advances, verified against `DockItemControl.xaml`): TitleText is 12px "Segoe UI"
+with `MaxWidth=100`; Segoe UI contains no Block Elements, DirectWrite falls back to **Segoe UI
+Symbol**, where U+2581..U+2588 all advance **11.256 px** at 12 px. 10 bars = 112.6 px → trimmed;
+9 = 101.3 px → still trimmed; **8 = 90.0 px → fits**. Fix: `BarCount` 10 → 8.
 
-Fix ideas, in order to try:
-- Drop to 9 (or 8) bars and see if the dots disappear — cheapest experiment, tells us the budget.
-- Check which font actually renders U+2581..U+2588 in WinUI and whether a run is measurable at
-  ≤100 DIP for 10 chars; maybe thinner glyphs (U+2581-style eighths are full-width; braille
-  patterns U+2800.. are narrower) buy more bars per pixel.
-- If bar count changes, keep `BarCount` the single knob (it already is) and consider it the future
-  settings-page value.
+Byproduct: the plan's open "width jitter" check is resolved — all eight ramp glyphs have identical
+advances in Segoe UI Symbol, so the block renderer cannot make the button breathe. (Braille can —
+see item 4.)
 
 ## 2. Replace "open volume mixer" click with our own visualizer page
 
@@ -56,12 +51,17 @@ Explore color, with eyes open about host constraints (all verified in the plan/s
 
 ## 4. Braille rendering spike (may also fix item 1)
 
-U+2800–U+28FF braille patterns give a 2x4 dot matrix per character — roughly 2x the horizontal
-resolution of block glyphs in the same width budget, so 16–20 bars where blocks give 10 (it's the
-trick TUI tools like btop use). Braille glyphs may also be narrower than the block eighths, which
-could dodge the ellipsis bug (item 1) as a side effect. Spike: render the same spectrum both ways,
-compare width, jitter, and readability at dock size. Renderer stays a pure function of
-`_levels[]`, so this is a candidate for a "render style" setting later.
+U+2800–U+28FF braille patterns give a 2x4 dot matrix per character — 2 bars per glyph at 4 levels
+each (it's the trick TUI tools like btop use). Measured 2026-08-16 while fixing item 1, in Segoe
+UI Symbol (the DirectWrite fallback that serves both blocks and braille for the dock's 12px
+"Segoe UI" title): dotted braille cells advance **9.041 px** → 11 cells fit MaxWidth=100 (99.5 px)
+→ **up to 22 bars** vs the blocks' 8, at the cost of only 4 vertical levels vs 8.
+
+⚠️ Measured trap: **blank U+2800 advances 7.811 px — narrower than every dotted cell (9.041 px)**,
+so a renderer that emits the blank cell makes the button breathe horizontally. Always keep at
+least one dot lit per cell (a bottom-row dot as the baseline, like the current U+2581 floor).
+Spike: render the same spectrum both ways, compare readability at dock size. Renderer stays a
+pure function of `_levels[]`, so this is a candidate for a "render style" setting later.
 
 ## 5. Stereo mirror mode
 
@@ -104,3 +104,12 @@ When replacing the placeholder `Assets/` PNGs (AgentsPanelExtension leftovers �
 any release): a mark that is literally a green→red spectrum of bars doubles as the brand, the
 Store tile, and the eventual settings-page icon. One SVG master → export the full
 scale/targetsize PNG matrix the manifest expects.
+
+## 11. Built-in self-test using tools/spectrum-test.wav
+
+The test signal (born 2026-08-16 while verifying the item-1 fix) could ship in the app: a
+"Test visualizer" command (top-level or right-click MoreCommands) that plays the tone-ladder +
+sweep through the default output so users can see every bar respond without hunting for music.
+Needs the wav packaged as Content (csproj currently only includes Assets/**/*.png) or synthesized
+at runtime (the generator math is ~40 lines, see tools/generate-spectrum-test.ps1). Pure
+visualizer scope — it plays a local file, no media integration.

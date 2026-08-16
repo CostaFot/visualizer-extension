@@ -5,7 +5,7 @@ pinnable **Dock band**. It captures whatever the machine is playing (WASAPI loop
 default render endpoint — no microphone, no per-app hooks) and draws ~15 fps spectrum bars as
 block glyphs in a dock button.
 
-- 10 log-spaced frequency bands (40 Hz–16 kHz), hand-rolled FFT, no audio dependencies
+- 8 log-spaced frequency bands (40 Hz–16 kHz), hand-rolled FFT, no audio dependencies
 - Runs only while the band is visible; throttles to 2 Hz after a few seconds of silence
 - Click the band to open the system volume mixer
 

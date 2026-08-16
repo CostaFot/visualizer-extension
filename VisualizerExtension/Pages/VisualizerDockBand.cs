@@ -24,7 +24,11 @@ namespace VisualizerExtension;
 // the moment audio returns). The dock is always visible; a pinned band must not burn CPU all day.
 internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged, IDisposable
 {
-    private const int BarCount = 10;
+    // 8 is the measured maximum that fits the host's title budget: TitleText is 12px "Segoe UI"
+    // with MaxWidth=100 and CharacterEllipsis (DockItemControl.xaml), Segoe UI has no block
+    // elements so DirectWrite falls back to Segoe UI Symbol, where U+2581..U+2588 advance
+    // 11.256 px at 12 px — 8 bars = 90.0 px fits, 9 = 101.3 px already trims to "…".
+    private const int BarCount = 8;
     private const double ActiveIntervalMs = 66;   // ~15 fps while audio plays
     private const double IdleIntervalMs = 500;    // 2 Hz once silence settles
     private const long IdleAfterMs = 3000;        // silence duration before throttling
@@ -90,7 +94,7 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
         Icon = new IconInfo("\uE8D6"); // Segoe Audio glyph — band icon in the dock's band manager
 
         // The one stable item = the one dock button. Icon deliberately blank so every pixel of the
-        // ~100 DIP title budget goes to the bars (10 block glyphs fit).
+        // ~100 DIP title budget goes to the bars (8 block glyphs fit — see BarCount).
         _visualizerItem = new ListItem(new OpenVolumeMixerCommand())
         {
             Title = BaselineFrame,
