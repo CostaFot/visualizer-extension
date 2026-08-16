@@ -104,18 +104,13 @@ On DC power, cap the active rate (e.g. 15 → 10 fps) via `Windows.System.Power.
 Fits the "a pinned band must not burn CPU all day" philosophy; combine with the existing idle
 throttle rather than adding a second timer-juggling path.
 
-## 9. ~~Scrolling spectrogram view~~ DONE 2026-08-16 (shipped as item 13's second style)
+## 9. ~~Scrolling spectrogram view~~ REMOVED 2026-08-16 (shipped and cut the same day)
 
-Shipped as `RenderSpectrogram` in `VisualizerCanvasPage`: rows = time (newest at the bottom,
-scrolling up), columns = the same band layout as the bars (so the frequency axis applies
-unchanged), intensity = blank → shade ramp U+2591/2592/2593 → full block, fed by INSTANTANEOUS
-levels (no attack/decay smoothing). During silence zero-rows scroll in until the canvas drains
-blank, then frame dedup kicks in. Selected via the item-13 page-style setting.
-
-Live verdict 2026-08-16: functional but "goofy"-looking (the bars style reads fine after its
-LED-matrix pass; this one hasn't had a look pass). Candidates when it gets one: longer history via
-a taller canvas, per-cell shade tuning, maybe braille density — do it alongside the color work
-(item 3).
+Shipped as `RenderSpectrogram` in `VisualizerCanvasPage` (rows = time scrolling up, shade-ramp
+intensity U+2591/2592/2593, instantaneous levels), selected via the item-13 page-style setting.
+The live verdict was "goofy"-looking and the user didn't like it, so the style and all its code
+(history ring, shade ramp, render method, settings choice, resources) were removed the same day.
+Don't re-propose it. Legacy persisted `"spectrogram"` settings values fall back to bars.
 
 ## 10. Real logo: the bars ARE the brand
 
@@ -181,7 +176,8 @@ Shipped as `Settings/VisualizerSettingsManager.cs` (JsonSettingsManager singleto
 AgentsPanelExtension's UsageSettingsManager; persisted to `visualizer.settings.json` under the
 CmdPal settings folder; `Settings = ...Instance.Settings` in the provider surfaces it in the
 palette's Settings UI). One `ChoiceSetSetting` "pageStyle": **Vertical bars with peak caps**
-(default) / **Scrolling spectrogram** (item 9). `VisualizerCanvasPage` reads it PULL-STYLE every
+(default) / **Oscilloscope** (item 14; the scrolling-spectrogram choice from item 9 shipped here
+too but was removed the same day). `VisualizerCanvasPage` reads it PULL-STYLE every
 tick and resets per-style render state on change — switching applies on the next frame, no
 restart. Same toolkit quirk as the reference repo: the visible field label comes from
 `Description`, not `Label`.
@@ -211,7 +207,7 @@ LED-matrix grid as the bars — each of the 59 columns lights its sample's cell 
 the vertical run bridging to the previous column (a bare one-cell-per-column plot shatters into
 confetti when the wave moves more than one row per column); unlit cells keep the U+00B7 "off LED"
 grid. Silence renders the flat centerline, which dedupes to zero cross-proc cost. The static
-footer is now per-style (`WriteAxis`): frequency labels for bars/spectrogram, blank for the
+footer is now per-style (`WriteAxis`): frequency labels for the bars, blank for the
 scope (a time-domain trace has no frequency axis).
 
 **Pen decision:** blocks, not braille — `notes/rendering.md` verifies Block Elements coverage in

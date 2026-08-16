@@ -187,15 +187,6 @@ namespace VisualizerExtension.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Scrolling spectrogram.
-        /// </summary>
-        public static string Settings_PageStyle_Spectrogram {
-            get {
-                return ResourceManager.GetString("Settings_PageStyle_Spectrogram", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Oscilloscope.
         /// </summary>
         public static string Settings_PageStyle_Oscilloscope {

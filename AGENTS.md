@@ -52,11 +52,10 @@ is measured and documented in `notes/rendering.md`; consult it before inventing 
 - `Pages/VisualizerCanvasPage.cs` — THE in-palette visualizer
   (TODO #12): a `ContentPage` holding one stable `PlainTextContent`
   (`FontFamily.Monospace` — host-guaranteed Cascadia Mono/Consolas), drawn as a 2-D character
-  canvas with a static per-style footer (frequency axis; blank for the scope) and three fill
+  canvas with a static per-style footer (frequency axis; blank for the scope) and two fill
   styles read pull-style from settings on every tick (#13): **vertical bars** — 20 bars × 14 rows
   (lower-partial blocks U+2581..U+2588 = 112 vertical steps, spaces are grid-safe in monospace)
-  with peak-hold caps (U+2594, hold-then-fall — #6) — **spectrogram** (#9) — rows = time
-  scrolling up, shade-ramp intensity, instantaneous levels — and **oscilloscope** (#14) — the
+  with peak-hold caps (U+2594, hold-then-fall — #6) — and **oscilloscope** (#14) — the
   newest ~21 ms of raw waveform (`TryReadWaveform`) as a blocks-pen connected trace. Frames mutate `_content.Text` only (push-only-on-change);
   `ItemsChanged` is never raised — on content pages it rebuilds the whole content control.
 - `Settings/VisualizerSettingsManager.cs` — JsonSettingsManager singleton (mirrors
@@ -169,9 +168,11 @@ disposal; the ellipsis fix (8-bar budget, measured); the in-palette `VisualizerP
 CmdPal-rendering-limits investigation (`notes/rendering.md`) and the vertical
 `VisualizerCanvasPage` with peak caps it produced (TODO #12 + #6, verified live 2026-08-16;
 visual polish deferred to the #3-era work); the braille dock band (#4 — verdict: both bands stay,
-pinning IS the dock style picker); the settings scaffold + page-style switch (#13) with the
-spectrogram style (#9); the oscilloscope page style (#14 — `TryReadWaveform` on the capture +
+pinning IS the dock style picker); the settings scaffold + page-style switch (#13); the
+oscilloscope page style (#14 — `TryReadWaveform` on the capture +
 a blocks-pen connected trace, braille pen deliberately skipped as unverified in Cascadia Mono).
+The spectrogram style (#9) shipped 2026-08-16 and was REMOVED the same day — the user didn't
+like it; don't re-propose it.
 **Next up: `notes/TODO.md`** — headline items: color exploration (#3), stereo mirror (#5).
 Also still open, from
 `notes/visualizer-extension-plan.md` Step 4: more settings (bar count, target fps, decay, idle

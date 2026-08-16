@@ -9,7 +9,7 @@ namespace VisualizerExtension;
 // The proper in-palette visualizer (TODO #12): a monospace character canvas with user-selectable
 // fill styles (TODO #13, read pull-style from VisualizerSettingsManager on every tick — a change
 // applies on the next frame, no restart): classic vertical spectrum bars with slowly-falling peak
-// caps (TODO #6), a scrolling spectrogram waterfall (TODO #9), or a Winamp-style oscilloscope
+// caps (TODO #6), or a Winamp-style oscilloscope
 // trace (TODO #14). The canvas is a ContentPage
 // with ONE stable PlainTextContent — the host renders it in guaranteed monospace (Cascadia Mono/Consolas)
 // and a repaint is a single TextBlock.Text assignment, no parse and no element-tree rebuild. See
@@ -56,21 +56,10 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
     private readonly char[] _scratch = new char[(Rows * LineLength) + Columns];
     private string _lastFrame;
 
-    // Spectrogram state: a ring of the last Rows frames' instantaneous levels (row = one tick,
-    // newest at _historyHead, drawn bottom-up so fresh audio enters at the baseline).
-    private readonly float[] _history = new float[Rows * BandCount];
-    private int _historyHead;
     private PageStyle _style = PageStyle.VerticalBars;
 
     // Oscilloscope scratch: one waveform sample per canvas column, fully rewritten each tick.
     private readonly float[] _waveform = new float[Columns];
-
-    // Level 0..1 -> spectrogram cell intensity, blank through shades to full block
-    // (U+2591 LIGHT / U+2592 MEDIUM / U+2593 DARK SHADE / U+2588 FULL BLOCK — built from char
-    // codes so no escape sequence can be mangled in transit; all are Block Elements, covered by
-    // Cascadia Mono/Consolas with uniform advances).
-    private static readonly char[] IntensityRamp =
-        [' ', (char)0x2591, (char)0x2592, (char)0x2593, (char)0x2588];
 
     // Lifecycle state — guarded by _gate (host add/remove vs. Dispose).
     private readonly object _gate = new();
@@ -157,16 +146,14 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
         _content.Text = _baselineFrame;
     }
 
-    // Clears all per-style render state so styles never bleed into each other (a spectrogram must
-    // not start from stale bar levels and vice versa). The scratch's bar area is fully rewritten
-    // by every style each frame, so it needs no clearing.
+    // Clears all per-style render state so styles never bleed into each other (a fresh style must
+    // not start from stale bar levels). The scratch's bar area is fully rewritten by every style
+    // each frame, so it needs no clearing.
     private void ResetRenderState()
     {
         Array.Clear(_levels);
         Array.Clear(_peaks);
         Array.Clear(_peakHold);
-        Array.Clear(_history);
-        _historyHead = 0;
     }
 
     // RenderLoop tick — pool thread, exceptions handled by the loop.
@@ -191,9 +178,7 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
         else
         {
             hasAudio = _source.TryReadBands(_bands);
-            frame = style == PageStyle.Spectrogram
-                ? RenderSpectrogram(hasAudio)
-                : RenderBars(hasAudio);
+            frame = RenderBars(hasAudio);
         }
 
         // Push-only-on-change: identical frames (settled silence) cost nothing cross-proc.
@@ -233,39 +218,6 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
         return RenderCanvas();
     }
 
-    // The waterfall (TODO #9): each tick pushes the INSTANTANEOUS levels (no attack/decay
-    // smoothing — smearing is the bars' aesthetic, not a spectrogram's) into the history ring;
-    // rows are time (newest at the bottom, scrolling up), columns stay the same band layout as
-    // the bars so the frequency axis applies unchanged, intensity is the shade ramp. During
-    // silence zero-rows keep scrolling in until the canvas drains blank, then frames dedupe.
-    private string RenderSpectrogram(bool hasAudio)
-    {
-        _historyHead = (_historyHead + 1) % Rows;
-        var newest = _historyHead * BandCount;
-        for (var k = 0; k < BandCount; k++)
-        {
-            _history[newest + k] = hasAudio ? Math.Clamp(_bands[k], 0f, 1f) : 0f;
-        }
-
-        for (var cell = 0; cell < Rows; cell++)
-        {
-            // cell counts from the bottom (0 = newest tick); the scratch is written top first.
-            var row = ((_historyHead - cell + Rows) % Rows) * BandCount;
-            var offset = (Rows - 1 - cell) * LineLength;
-            for (var k = 0; k < BandCount; k++)
-            {
-                var glyph = IntensityRamp[(int)(_history[row + k] * 4.99f)];
-                var x = offset + (k * (BarWidth + GapWidth));
-                for (var w = 0; w < BarWidth; w++)
-                {
-                    _scratch[x + w] = glyph;
-                }
-            }
-        }
-
-        return new string(_scratch);
-    }
-
     // The oscilloscope (TODO #14, from #12's Winamp north star): the newest ~21 ms of raw
     // waveform (SpectrumSource.TryReadWaveform, one sample per canvas column) drawn as a
     // connected trace on the same LED-matrix grid as the bars — each column lights its sample's
@@ -301,8 +253,7 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
         Math.Clamp((int)((sample + 1f) * 0.5f * Rows), 0, Rows - 1);
 
     // (Re)writes the static footer line for the active style: the log frequency axis for the
-    // spectrum styles (bars and spectrogram share the band layout), blank for the oscilloscope
-    // (a time-domain trace has no frequency axis).
+    // bars, blank for the oscilloscope (a time-domain trace has no frequency axis).
     private void WriteAxis(PageStyle style)
     {
         Array.Fill(_scratch, ' ', Rows * LineLength, Columns);

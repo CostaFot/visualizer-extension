@@ -11,7 +11,6 @@ namespace VisualizerExtension;
 internal enum PageStyle
 {
     VerticalBars,
-    Spectrogram,
     Oscilloscope,
 }
 
@@ -31,7 +30,6 @@ internal sealed class VisualizerSettingsManager : JsonSettingsManager
     public static readonly VisualizerSettingsManager Instance = new();
 
     private const string PageStyleBars = "bars";
-    private const string PageStyleSpectrogram = "spectrogram";
     private const string PageStyleOscilloscope = "oscilloscope";
 
     // First choice is the default (ChoiceSetSetting takes choices[0].Value as its default).
@@ -39,7 +37,6 @@ internal sealed class VisualizerSettingsManager : JsonSettingsManager
         "pageStyle",
         [
             new ChoiceSetSetting.Choice(Resources.Settings_PageStyle_Bars, PageStyleBars),
-            new ChoiceSetSetting.Choice(Resources.Settings_PageStyle_Spectrogram, PageStyleSpectrogram),
             new ChoiceSetSetting.Choice(Resources.Settings_PageStyle_Oscilloscope, PageStyleOscilloscope),
         ])
     {
@@ -48,10 +45,10 @@ internal sealed class VisualizerSettingsManager : JsonSettingsManager
         IgnoreUnknownValue = true,
     };
 
-    // The canvas fill style; unknown/legacy persisted values fall back to bars.
+    // The canvas fill style; unknown/legacy persisted values (e.g. the removed "spectrogram")
+    // fall back to bars.
     public PageStyle PageStyle => _pageStyle.Value switch
     {
-        PageStyleSpectrogram => PageStyle.Spectrogram,
         PageStyleOscilloscope => PageStyle.Oscilloscope,
         _ => PageStyle.VerticalBars,
     };
