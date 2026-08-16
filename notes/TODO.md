@@ -62,6 +62,15 @@ least one dot lit per cell (a bottom-row dot as the baseline, like the current U
 Spike: render the same spectrum both ways, compare readability at dock size. Renderer stays a
 pure function of `_levels[]`, so this is a candidate for a "render style" setting later.
 
+**Spike code landed 2026-08-16, comparison pending live deploy.** The glyph mapping was extracted
+into `Rendering/ISpectrumRenderer.cs` (pure levels→frame strategy — the seam item 13's style
+setting will switch on): `BlockBarsRenderer` (the original 8×8) and `BrailleBarsRenderer`
+(11 cells → 22 bars × 4 levels; every column keeps its bottom dot lit — baseline cell U+28C0 —
+so the blank-cell trap can't fire). The provider now registers a SECOND dock band,
+`com.costafotiadis.visualizer.dock.spectrum.braille` ("Visualizer (braille)"), sharing the one
+`SpectrumSource`; pin both and A/B the same audio. Verdict + which band retires: TBD after the
+side-by-side.
+
 ## 5. Stereo mirror mode
 
 Classic Winamp look: bass in the center, L/R channels spreading outward. Needs per-channel FFT

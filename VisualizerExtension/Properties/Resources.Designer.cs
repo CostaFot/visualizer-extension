@@ -88,6 +88,15 @@ namespace VisualizerExtension.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Visualizer (braille).
+        /// </summary>
+        public static string Band_Title_Braille {
+            get {
+                return ResourceManager.GetString("Band_Title_Braille", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Visualizer.
         /// </summary>
         public static string Command_Visualizer {

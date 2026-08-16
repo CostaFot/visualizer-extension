@@ -7,9 +7,9 @@ using Windows.Foundation;
 namespace VisualizerExtension;
 
 // The product: a Command Palette Dock band whose single button renders a live audio spectrum as
-// block glyphs (U+2581..U+2588) in the button title, ~15 fps while audio plays. Clicking the
-// button opens the big in-palette visualizer (VisualizerPage); the volume mixer lives in the
-// right-click menu.
+// glyphs in the button title (which glyphs is the injected ISpectrumRenderer's call — block bars
+// or braille), ~15 fps while audio plays. Clicking the button opens the big in-palette visualizer
+// (VisualizerPage); the volume mixer lives in the right-click menu.
 //
 // The 15-fps channel is IN-PLACE MUTATION: GetItems() returns the same ListItem instance forever
 // and each frame mutates its Title — the host caches dock view models by IListItem reference and
@@ -24,24 +24,20 @@ namespace VisualizerExtension;
 // after ~3 s of silence) lives in RenderLoop.
 internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged, IDisposable
 {
-    // 8 is the measured maximum that fits the host's title budget: TitleText is 12px "Segoe UI"
-    // with MaxWidth=100 and CharacterEllipsis (DockItemControl.xaml), Segoe UI has no block
-    // elements so DirectWrite falls back to Segoe UI Symbol, where U+2581..U+2588 advance
-    // 11.256 px at 12 px — 8 bars = 90.0 px fits, 9 = 101.3 px already trims to "…".
-    private const int BarCount = 8;
-
-    // U+2581 LOWER ONE EIGHTH BLOCK repeated — the all-quiet frame, and the first paint.
-    private static readonly string BaselineFrame = new('\u2581', BarCount);
+    // How levels become glyphs is the renderer's business (block bars, braille, ... — one band
+    // per style, each with its own unique Id; the title-budget measurements live with each
+    // renderer). This class owns everything else: lifecycle, smoothing, and the
+    // push-only-on-change title channel.
+    private readonly ISpectrumRenderer _renderer;
 
     private readonly SpectrumSource _source;
     private readonly ListItem _visualizerItem;
     private readonly IListItem[] _items;
 
     // Render state — touched only from RenderLoop ticks (serialized; loop dispose drains).
-    private readonly float[] _bands = new float[BarCount];
-    private readonly float[] _levels = new float[BarCount];
-    private readonly char[] _frame = new char[BarCount];
-    private string _lastFrame = BaselineFrame;
+    private readonly float[] _bands;
+    private readonly float[] _levels;
+    private string _lastFrame;
 
     // Lifecycle state — guarded by _gate (host add/remove vs. Dispose).
     private readonly object _gate = new();
@@ -66,7 +62,7 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
                     StartLocked();
                 }
             }
-            Log.Info("Band", "Band visible — capture running");
+            Log.Info("Band", $"Band visible — capture running ({Title})");
         }
         remove
         {
@@ -77,26 +73,30 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
                     StopLocked();
                 }
             }
-            Log.Info("Band", "Band hidden — capture stopped");
+            Log.Info("Band", $"Band hidden — capture stopped ({Title})");
         }
     }
 
-    public VisualizerDockBand(SpectrumSource source, VisualizerPage page)
+    public VisualizerDockBand(SpectrumSource source, VisualizerPage page, ISpectrumRenderer renderer, string id, string title)
     {
         _source = source;
+        _renderer = renderer;
+        _bands = new float[renderer.BarCount];
+        _levels = new float[renderer.BarCount];
+        _lastFrame = renderer.Baseline;
 
         // Dock bands require a non-empty, unique command Id or the host silently drops/conflates
         // the band.
-        Id = "com.costafotiadis.visualizer.dock.spectrum";
-        Title = Resources.Band_Title;
+        Id = id;
+        Title = title;
         Icon = new IconInfo("\uE8D6"); // Segoe Audio glyph — band icon in the dock's band manager
 
         // The one stable item = the one dock button. Icon deliberately blank so every pixel of the
-        // ~100 DIP title budget goes to the bars (8 block glyphs fit — see BarCount). Its command
-        // is the page: clicking opens the palette at the big visualizer.
+        // ~100 DIP title budget goes to the bars (each renderer sizes itself to that budget). Its
+        // command is the page: clicking opens the palette at the big visualizer.
         _visualizerItem = new ListItem(page)
         {
-            Title = BaselineFrame,
+            Title = renderer.Baseline,
             Subtitle = string.Empty,
             Icon = new IconInfo(string.Empty),
             MoreCommands = [new CommandContextItem(new OpenVolumeMixerCommand())],
@@ -123,8 +123,8 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
         _lease = null;
 
         Array.Clear(_levels);
-        _lastFrame = BaselineFrame;
-        _visualizerItem.Title = BaselineFrame;
+        _lastFrame = _renderer.Baseline;
+        _visualizerItem.Title = _renderer.Baseline;
     }
 
     // RenderLoop tick — pool thread (safe for cross-proc item mutation; TimeDate's clock band is
@@ -133,16 +133,15 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
     {
         var hasAudio = _source.TryReadBands(_bands);
 
-        for (var i = 0; i < BarCount; i++)
+        for (var i = 0; i < _levels.Length; i++)
         {
-            // Fast attack, exponential decay; then level → one of the 8 block glyphs.
+            // Fast attack, exponential decay; the renderer turns the smoothed levels into glyphs.
             var target = hasAudio ? Math.Clamp(_bands[i], 0f, 1f) : 0f;
             _levels[i] = target > _levels[i] ? target : _levels[i] * 0.72f;
-            _frame[i] = (char)(0x2581 + (int)(_levels[i] * 7.99f));
         }
 
         // Push-only-on-change: identical frames (silence) cost nothing cross-proc.
-        var frame = new string(_frame);
+        var frame = _renderer.Render(_levels);
         if (!string.Equals(frame, _lastFrame, StringComparison.Ordinal))
         {
             _lastFrame = frame;

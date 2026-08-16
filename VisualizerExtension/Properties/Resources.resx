@@ -70,6 +70,9 @@
   <data name="Band_Title" xml:space="preserve">
     <value>Visualizer</value>
   </data>
+  <data name="Band_Title_Braille" xml:space="preserve">
+    <value>Visualizer (braille)</value>
+  </data>
   <data name="Action_OpenVolumeMixer" xml:space="preserve">
     <value>Open volume mixer</value>
   </data>
