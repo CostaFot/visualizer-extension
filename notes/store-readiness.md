@@ -47,29 +47,33 @@ certification with the same value.
 
 ## B. Certification blockers — content & legal
 
-- [ ] **B4 [agent] Hosted privacy policy + terms.** Partner Center requires a privacy-policy URL.
+- [x] **B4 [agent] Hosted privacy policy + terms.** *(agent part done 2026-08-16 — `docs/` written;
+  [user] still to enable GitHub Pages once E13's deploy workflow is pushed.)* Partner Center requires a privacy-policy URL.
   Create `docs/{index,privacy,terms}.html` + `style.css` modeled on AgentsPanel's `docs/`,
   adapted to this app's much simpler story: audio is captured via WASAPI loopback of the default
   output device, processed entirely in memory, never recorded, stored, or transmitted; **no
   microphone access**; no network access at all; no accounts, no credentials, zero telemetry; the
   only file written is the local settings JSON. [user] then enables GitHub Pages (deploy workflow
   is E13).
-- [ ] **B5 [agent] README to release shape.** Restructure to the reference repos' README shape:
+- [x] **B5 [agent] README to release shape.** *(done 2026-08-16 — screenshot paths reference the
+  E15 filenames and will 404 on GitHub until the screenshots land.)* Restructure to the reference repos' README shape:
   badges, dock-strip hero screenshot, **non-affiliation note** (not affiliated with or endorsed
-  by Microsoft or the PowerToys team), Installation section (requires **PowerToys 0.11+** — the
-  SDK pin means CmdPal ≥0.11 is the minimum host), per-feature screenshot sections, FAQ, MIT
+  by Microsoft or the PowerToys team), Installation section (requires **PowerToys 0.100+** — the
+  SDK pin means CmdPal ≥0.11 is the minimum host, and PowerToys 0.100 is the release shipping
+  CmdPal 0.11; never write the CmdPal version as a PowerToys version), per-feature screenshot sections, FAQ, MIT
   footer. Stub the Store badge + winget one-liner in an HTML comment to uncomment after approval.
   Drop the internal "maintenance only, see AGENTS.md" line — that's contributor-facing, keep it
   out of the storefront-facing README (or move it to a Contributing note).
-- [ ] **B6 [either] Store listing copy → `notes/store-listing.md`.** Short + full description
-  modeled on MarketExtension's `notes/store-listing.md`. Must include: the PowerToys 0.11+
-  requirement (AGENTS.md flags this for the app description at release time — also append it to
-  the `Package.appxmanifest` description); the non-affiliation paragraph; honest claims only —
+- [x] **B6 [either] Store listing copy → `notes/store-listing.md`.** *(done 2026-08-16; corrected same day — the
+  requirement line lives in the store description ONLY, like AgentsPanel, not in the
+  appxmanifest, and reads PowerToys 0.100+, not "0.11".)* Short + full description
+  modeled on MarketExtension's `notes/store-listing.md`. Must include: the PowerToys
+  requirement line; the non-affiliation paragraph; honest claims only —
   "visualizes what the machine is playing" (loopback of the default render endpoint; no
   microphone). Honest-caveat candidates: exclusive-mode/DRM audio streams don't appear in
   loopback, and per-device capture follows the *default* output device.
-- [ ] **B7 [either] Certification test notes → `notes/certification-notes.md`.** A reviewer has
-  no music playing. Notes must say: install PowerToys ≥0.11, open Command Palette, find
+- [x] **B7 [either] Certification test notes → `notes/certification-notes.md`.** *(done 2026-08-16.)* A reviewer has
+  no music playing. Notes must say: install PowerToys ≥0.100, open Command Palette, find
   "Visualizer", pin a band via the Dock's band manager, then run the built-in **"Test
   visualizer"** command (hub row or any band's right-click menu) — the app plays its own test
   signal and lights up with no accounts or content needed. Include the standard `runFullTrust`
@@ -77,22 +81,28 @@ certification with the same value.
 
 ## C. First-run / UX sweep
 
-- [ ] **C8 [agent] Silent-machine first run.** Verify (by code reading — behavior ships already)
+- [x] **C8 [agent] Silent-machine first run.** *(verified by code reading 2026-08-16: bands paint
+  their baseline glyph rows, canvas paints the sliver-floor LED grid + axis (scope: flat
+  centerline), VU dot sits at step 0 — reads as "quiet", not broken.)* Verify (by code reading — behavior ships already)
   what a fresh user sees with no audio playing: bands show the idle floor glyphs, canvas shows an
   empty grid + footer, nothing looks broken. If anything reads as "broken" rather than "quiet",
   surface it to the user before changing behavior (scope is frozen).
-- [ ] **C9 [agent] String sweep.** Confirm every user-facing string is in
+- [x] **C9 [agent] String sweep.** *(verified 2026-08-16: 19 resx keys ↔ 19 Designer properties in
+  perfect lock-step; only non-resource literal is the capture thread name, not user-facing.)* Confirm every user-facing string is in
   `Properties/Resources.resx` with `Resources.Designer.cs` in lock-step (convention says yes —
   verify before submission; certification screenshots freeze wording).
 
 ## D. Versioning & build hygiene
 
-- [ ] **D10 [agent] `notes/releasing.md` for this repo.** Copy AgentsPanel's shape: bump table —
+- [x] **D10 [agent] `notes/releasing.md` for this repo.** *(done 2026-08-16.)* Copy AgentsPanel's shape: bump table —
   `VisualizerExtension/VisualizerExtension.csproj` `<AppxPackageVersion>` (`<Version>` follows) /
   `Package.appxmanifest` `Identity Version=` / `app.manifest` `assemblyIdentity version=` — plus
   the PowerShell bump one-liner and the release-workflow command. All three sites verified in
   sync at `0.1.0.0` today.
-- [ ] **D11 [agent] Repo hygiene check.** `git ls-files` for stray `.idea/` tracking; confirm sln
+- [x] **D11 [agent] Repo hygiene check.** *(done 2026-08-16: no stray IDE/build files tracked; sln
+  platform configs match AgentsPanel's shipped shape. Discrepancy: this repo has NO
+  `WindowsSdkPackageVersion` pin — the item assumed one existed (AgentsPanel pins
+  `10.0.26100.68-preview` in its csproj); builds clean without it, left absent.)* `git ls-files` for stray `.idea/` tracking; confirm sln
   platform configs are intentional; keep the preview `WindowsSdkPackageVersion` pin (both
   reference repos shipped on it). The ARM64-first alphabetical trap remains — `-p:Platform=x64`
   stays mandatory in every build.
@@ -101,7 +111,9 @@ certification with the same value.
 
 ## E. Release infrastructure (copy from the reference repos, rename)
 
-- [ ] **E13 [agent] Workflows.** Copy from AgentsPanel's `.github/workflows/` and rename the env
+- [x] **E13 [agent] Workflows.** *(done 2026-08-16 — `release-msix.yml` + `deploy-pages.yml`
+  copied/renamed; setup-dotnet corrected to `10.0.x` in both release-msix and build-check (this
+  repo is .NET 10, AgentsPanel's originals say 9). `update-winget.yml` still post-approval.)* Copy from AgentsPanel's `.github/workflows/` and rename the env
   vars (`DISPLAY_NAME`/`EXTENSION_NAME`/`FOLDER_NAME`): `release-msix.yml` (x64+ARM64 → makeappx
   bundle → signtool → GitHub Release) and `deploy-pages.yml` (for B4). `build-check.yml` already
   exists. Later, post-Store-approval: `update-winget.yml` from MarketExtension for repeat WinGet
@@ -134,10 +146,12 @@ certification with the same value.
 
 ## G. Recommended, not blocking
 
-- [ ] **G18 [either] FAQ caveats.** Consider README/listing FAQ entries for the honest caveats:
+- [x] **G18 [either] FAQ caveats.** *(done 2026-08-16 — covered in the README FAQ and the listing
+  copy's "Good to know" paragraph.)* Consider README/listing FAQ entries for the honest caveats:
   exclusive-mode/DRM audio doesn't show up in loopback; the visualizer follows the default output
   device; silence throttles the refresh (by design).
-- [ ] **G19 [agent] Dead-asset check.** `Assets/LockScreenLogo.scale-200.png` is unreferenced
+- [x] **G19 [agent] Dead-asset check.** *(resolved 2026-08-16: kept per precedent — both reference
+  repos shipped it inert. Say the word to delete it instead.)* `Assets/LockScreenLogo.scale-200.png` is unreferenced
   (and, inherited from the reference repos, not even a valid PNG). Precedent: both reference
   repos shipped it through certification inert — keep unless the user says otherwise.
 
