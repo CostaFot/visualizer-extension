@@ -109,10 +109,14 @@ disposal (the hardening the spike deliberately skipped). **Next up: `notes/TODO.
 trailing-"…" ellipsis bug on the dock button, replacing the volume-mixer click with our own
 in-palette visualizer page, and color exploration (green→red peaks). Also still open, from
 `notes/visualizer-extension-plan.md` Step 4: settings page (bar count, target fps, decay, idle
-behavior), Tier-1 peak-meter low-power mode as a settings choice, SMTC "now playing"
-title/artist subtitle or second button, real PNG logo assets (current `Assets/` PNGs are
-placeholders copied from AgentsPanelExtension — replace before any release), `notes/releasing.md`
-+ release workflow when it's time to ship.
+behavior), Tier-1 peak-meter low-power mode as a settings choice, real PNG logo assets (current
+`Assets/` PNGs are placeholders copied from AgentsPanelExtension — replace before any release),
+`notes/releasing.md` + release workflow when it's time to ship.
+
+**Scope decision (2026-08-16): this is NOT a media-player app.** No SMTC integration — no
+now-playing metadata, album art, or play/pause/track controls. The extension visualizes the
+machine's audio, full stop; media controls are MediaControlsExtension's turf. Don't re-propose
+SMTC features (the plan note predates this decision and still mentions them).
 
 ## Git
 
