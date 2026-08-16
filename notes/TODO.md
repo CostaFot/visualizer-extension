@@ -112,6 +112,11 @@ unchanged), intensity = blank → shade ramp U+2591/2592/2593 → full block, fe
 levels (no attack/decay smoothing). During silence zero-rows scroll in until the canvas drains
 blank, then frame dedup kicks in. Selected via the item-13 page-style setting.
 
+Live verdict 2026-08-16: functional but "goofy"-looking (the bars style reads fine after its
+LED-matrix pass; this one hasn't had a look pass). Candidates when it gets one: longer history via
+a taller canvas, per-cell shade tuning, maybe braille density — do it alongside the color work
+(item 3).
+
 ## 10. Real logo: the bars ARE the brand
 
 When replacing the placeholder `Assets/` PNGs (AgentsPanelExtension leftovers — must happen before
@@ -147,9 +152,12 @@ Shipped as `Pages/VisualizerCanvasPage.cs`: 20 vertical bars × 14 rows (lower-p
 112 vertical steps), peak-hold caps (item 6), static frequency-axis footer; dock clicks and the
 top-level entry now land there. The v1 rows page survives behind the top-level item's context menu
 ("Visualizer (rows)"), converted to `DynamicListPage` so palette typing can't fuzzy-scramble its
-rows. Verified live 2026-08-16: the canvas renders and animates correctly. Visual polish is
-deliberately deferred — "works, can look better" — tune geometry/density/decay when styles (#13)
-and color (#3) get built rather than iterating blind now.
+rows. Verified live 2026-08-16: the canvas renders and animates correctly. First polish pass same
+day, after a screen recording showed the bars reading as accidental-looking broken tiles: the
+viewer's TextBlock line spacing makes stacked cells discrete (unfixable — see rendering.md), so
+the bars style now leans into the LED-matrix look — faint U+00B7 dot grid in unlit cells ("off
+LEDs"), U+2500 floating line as the peak cap (U+2594 was invisibly thin at cell size). Further
+look tuning belongs with color (#3).
 
 **Design north star: classic Winamp.** The remaining looks, feasibility-mapped to the (now
 proven) character canvas:

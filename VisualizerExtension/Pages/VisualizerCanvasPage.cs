@@ -254,10 +254,15 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
         return new string(_scratch);
     }
 
-    // Draws every bar into the scratch and snapshots it. Bars fill bottom-up: full blocks
-    // U+2588 below a LOWER-partial tip U+2581..U+2587 (code point 0x2580 + eighths of ink), floor
-    // of one eighth so silent bands keep a baseline sliver. The peak cap is U+2594 (UPPER one
-    // eighth — it hangs at the top of its cell) drawn only when it sits clear above the bar.
+    // Draws every bar into the scratch and snapshots it. The viewer's TextBlock has natural line
+    // spacing we cannot remove, so stacked cells NEVER touch — the canvas is a discrete LED
+    // matrix, not a continuous column, and the rendering leans into that: unlit cells above each
+    // bar show a faint middle-dot grid (U+00B7 — the "off LEDs", making the tiling look
+    // deliberate), lit cells fill bottom-up with full blocks U+2588 under a LOWER-partial tip
+    // U+2581..U+2587 (code point 0x2580 + eighths of ink; floor of one eighth so silent bands
+    // keep a baseline sliver), and the peak cap is a centered box-drawing line U+2500 floating in
+    // its cell when it sits clear above the bar. The extras are Cascadia Mono/Consolas-covered
+    // with uniform advances; built from char codes so no escape can be mangled in transit.
     private string RenderCanvas()
     {
         for (var k = 0; k < BandCount; k++)
@@ -273,8 +278,8 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
                 var ink = eighths - (cell * 8);
                 var glyph = ink >= 8 ? '\u2588'
                     : ink > 0 ? (char)(0x2580 + ink)
-                    : cell == capCell && capCell > barTopCell ? '\u2594'
-                    : ' ';
+                    : cell == capCell && capCell > barTopCell ? (char)0x2500
+                    : (char)0x00B7;
 
                 // cell counts from the bottom; the scratch is written top line first.
                 var offset = ((Rows - 1 - cell) * LineLength) + x;

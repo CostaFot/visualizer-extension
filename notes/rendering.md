@@ -67,6 +67,13 @@ Every alternative loses:
 - Viewer: `ExtViews\Controls\PlainTextContentViewer.xaml(.cs)`. Monospace forced at `:96`;
   `WrapWords=false` → `TextWrapping=NoWrap` + horizontal scroll; selection/copy/zoom
   (Ctrl+/−/0) come free.
+- **Stacked cells never touch vertically** (verified live 2026-08-16): the viewer's `TextBlock`
+  sets no `LineHeight`/`LineStackingStrategy`, so lines get Cascadia Mono's natural line box,
+  which is taller than the block glyphs' ink — every row of glyphs is separated by a horizontal
+  seam no extension can remove. Continuous vertical columns are impossible; the canvas is a
+  DISCRETE LED-matrix and styles must be designed for that (the bars style leans in: faint
+  U+00B7 dot grid for unlit cells, U+2500 line as the floating peak cap). Horizontal adjacency
+  within a line is seamless.
 - **Do not touch `FontFamily` or `WrapWords` per frame** — those run a layout-invalidation hack
   (`Text=""` then restore, `:150-155`). Only mutate `Text`.
 - Glyph coverage: Cascadia Mono (and the Consolas fallback) both cover Block Elements
