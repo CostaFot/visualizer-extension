@@ -70,6 +70,15 @@ namespace VisualizerExtension.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to {0} – {1}.
+        /// </summary>
+        public static string Band_Range {
+            get {
+                return ResourceManager.GetString("Band_Range", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Visualizer.
         /// </summary>
         public static string Band_Title {
@@ -102,6 +111,24 @@ namespace VisualizerExtension.Properties {
         public static string DirectLaunch_Message {
             get {
                 return ResourceManager.GetString("DirectLaunch_Message", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Hz.
+        /// </summary>
+        public static string Unit_Hz {
+            get {
+                return ResourceManager.GetString("Unit_Hz", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} kHz.
+        /// </summary>
+        public static string Unit_kHz {
+            get {
+                return ResourceManager.GetString("Unit_kHz", resourceCulture);
             }
         }
 

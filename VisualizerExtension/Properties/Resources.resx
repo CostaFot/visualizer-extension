@@ -73,6 +73,15 @@
   <data name="Action_OpenVolumeMixer" xml:space="preserve">
     <value>Open volume mixer</value>
   </data>
+  <data name="Band_Range" xml:space="preserve">
+    <value>{0} – {1}</value>
+  </data>
+  <data name="Unit_Hz" xml:space="preserve">
+    <value>{0} Hz</value>
+  </data>
+  <data name="Unit_kHz" xml:space="preserve">
+    <value>{0} kHz</value>
+  </data>
   <data name="DirectLaunch_Message" xml:space="preserve">
     <value>{0} is a background extension for PowerToys Command Palette — there is nothing to launch directly. Open Command Palette and search for "{1}", or pin the Visualizer band in the Dock.</value>
   </data>

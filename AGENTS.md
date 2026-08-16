@@ -25,28 +25,40 @@ internals: `C:\Users\jarla\code\PowerToys\src\modules\cmdpal\Microsoft.CmdPal.UI
 
 ## Architecture in one screen
 
-Two classes carry the whole product; everything else is scaffold.
+Two render surfaces over one shared capture; everything else is scaffold.
 
-- `Pages/VisualizerDockBand.cs` — the band. A `ListPage` returned from the provider's
-  `GetDockBands()` (wrapped in a `CommandItem`). **The 15-fps channel is in-place mutation**: ONE
-  stable `ListItem` returned from `GetItems()` forever; each timer tick mutates `.Title` — the
-  host caches dock view models by `IListItem` reference and repaints just that button.
-  `ItemsChanged` is NEVER raised. The `INotifyItemsChanged` add/remove accessors are the de-facto
-  visible/hidden hooks: observer adds are **refcounted** (host may add twice); capture + timer
-  start at the first observer, torn down at the last — a hidden band costs nothing. **Idle
-  throttle**: after ~3 s of silence the timer drops to 2 Hz (still sampling → snaps back on
-  audio); a pinned band must not burn CPU all day.
+- **The render channel (both surfaces): in-place mutation.** Stable `ListItem` instances returned
+  from `GetItems()` forever; each tick mutates `.Title` — the host caches view models by
+  `IListItem` reference (dock: `DockBandViewModel`; palette list: `ListItemViewModel`, verified to
+  handle per-item Title `PropChanged`) and repaints just that element. `ItemsChanged` is NEVER
+  raised. The `INotifyItemsChanged` add/remove accessors are the de-facto visible/hidden hooks:
+  observer adds are **refcounted** (host may add twice); a `SpectrumSource` lease + `RenderLoop`
+  start at the first observer, torn down at the last — a hidden surface costs nothing.
+- `Pages/VisualizerDockBand.cs` — the band (from `GetDockBands()`, wrapped in a `CommandItem`).
+  ONE item, 8 vertical block glyphs (U+2581..U+2588) — 8 is the measured title-budget max, see
+  Gotchas. Click opens `VisualizerPage`; volume mixer is a `MoreCommands` right-click action.
+- `Pages/VisualizerPage.cs` — the big in-palette visualizer and the top-level palette entry: one
+  row per band, titles are horizontal bars (full U+2588 blocks + one left-partial U+2589..U+258F
+  tip; partial advances are ink-proportional in Segoe UI Symbol so bar length is continuous —
+  32 cells × 8 = 256 steps), subtitles are the band's frequency range.
+- `Helpers/RenderLoop.cs` — the shared pump: ~15 fps timer, **idle throttle** (2 Hz after ~3 s of
+  silence, still sampling → snaps back on audio; a pinned band must not burn CPU all day),
+  every tick exception-wrapped (a throw on a pool thread kills the process), and a draining
+  `Dispose` (waits out the in-flight tick) so owners can tear down right after it returns — never
+  call it from inside the tick.
+- `Audio/SpectrumSource.cs` — refcounted owner of the ONE `SpectrumCapture` shared by both
+  surfaces (the dock is always visible, so band + page live together is the normal case).
+  `TryReadBands` is serialized under its gate (the capture reuses FFT scratch buffers).
 - `Audio/SpectrumCapture.cs` — the input. Dependency-free WASAPI loopback: raw COM vtable calls
   via `delegate* unmanaged[Stdcall]` + slot indices (no NAudio, no ComImport RCWs). Own background
-  thread fills a 2048-sample ring; `TryReadBands` (called from the render tick only) does
-  Hann-window → radix-2 FFT → 8 log-spaced bands (40 Hz–16 kHz) → treble tilt → slow auto-gain →
-  sqrt loudness. Loopback delivers NO packets during silence — "no packet in 250 ms" IS the
-  silence signal (`TryReadBands` returns false), never something to block on. On `COMException`
-  (device change) the loop tears down and rebinds after 500 ms. Constructor starts the thread,
-  `Dispose` stops it — the band creates/disposes per visibility transition.
-- `VisualizerCommandsProvider.cs` — one top-level `CommandItem` (open volume mixer; the band is
-  the product, the palette entry is just a discoverable face) + one dock band. Provider `Dispose`
-  disposes the band.
+  thread fills a 2048-sample ring; `TryReadBands` does Hann-window → radix-2 FFT → caller-sized
+  log-spaced bands (40 Hz–16 kHz) → treble tilt → slow auto-gain → sqrt loudness. Loopback
+  delivers NO packets during silence — "no packet in 250 ms" IS the silence signal (`TryReadBands`
+  returns false), never something to block on. On `COMException` (device change) the loop tears
+  down and rebinds after 500 ms. Constructor starts the thread, `Dispose` stops it — only
+  `SpectrumSource` creates/disposes it.
+- `VisualizerCommandsProvider.cs` — wires source → page → band; one top-level `CommandItem`
+  opening the page + one dock band. Provider `Dispose` disposes band, page, then source.
 - Deliberately **NO Rx** anywhere (the visualizer avoids the whole
   Rx-gate↔STA deadlock class — keep it that way) and no settings yet (bar count / fps / idle
   behavior are a planned CmdPal settings page, see the plan note).
@@ -123,10 +135,12 @@ Playing audio is fine and expected; deploying the extension remains the user's j
 
 ## Status / roadmap
 
-Shipped in the scaffold: Tier-2 loopback+FFT band with visibility lifecycle, idle throttle, and
-disposal (the hardening the spike deliberately skipped). **Next up: `notes/TODO.md`** — the
-trailing-"…" ellipsis bug on the dock button, replacing the volume-mixer click with our own
-in-palette visualizer page, and color exploration (green→red peaks). Also still open, from
+Shipped so far: Tier-2 loopback+FFT dock band with visibility lifecycle, idle throttle, and
+disposal; the ellipsis fix (8-bar budget, measured); the in-palette `VisualizerPage` v1
+(horizontal bars — proves the palette render channel, looks silly, superseded by TODO #12).
+**Next up: `notes/TODO.md`** — headline items: a proper VERTICAL page visualizer after a
+CmdPal-rendering-limits investigation (#12), user-selectable visualizer styles via settings (#13),
+color exploration (#3). Also still open, from
 `notes/visualizer-extension-plan.md` Step 4: settings page (bar count, target fps, decay, idle
 behavior), Tier-1 peak-meter low-power mode as a settings choice, real PNG logo assets (current
 `Assets/` PNGs are placeholders copied from AgentsPanelExtension — replace before any release),

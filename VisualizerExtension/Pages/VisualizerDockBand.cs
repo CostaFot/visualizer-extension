@@ -7,7 +7,9 @@ using Windows.Foundation;
 namespace VisualizerExtension;
 
 // The product: a Command Palette Dock band whose single button renders a live audio spectrum as
-// block glyphs (U+2581..U+2588) in the button title, ~15 fps while audio plays.
+// block glyphs (U+2581..U+2588) in the button title, ~15 fps while audio plays. Clicking the
+// button opens the big in-palette visualizer (VisualizerPage); the volume mixer lives in the
+// right-click menu.
 //
 // The 15-fps channel is IN-PLACE MUTATION: GetItems() returns the same ListItem instance forever
 // and each frame mutates its Title — the host caches dock view models by IListItem reference and
@@ -17,11 +19,9 @@ namespace VisualizerExtension;
 //
 // Lifecycle: the host subscribes ItemsChanged when the band becomes visible and unsubscribes when
 // it's hidden, so the add/remove accessors are the de-facto Loaded/Unloaded hooks. Observer adds
-// are REFCOUNTED (the host may add twice): loopback capture + render timer start at the first
-// observer and are torn down at the last one — a hidden band costs nothing.
-//
-// Idle throttle: after ~3 s of silence the timer drops to 2 Hz (still sampling, so it snaps back
-// the moment audio returns). The dock is always visible; a pinned band must not burn CPU all day.
+// are REFCOUNTED (the host may add twice): a SpectrumSource lease + RenderLoop start at the first
+// observer and are torn down at the last — a hidden band costs nothing. The idle throttle (2 Hz
+// after ~3 s of silence) lives in RenderLoop.
 internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged, IDisposable
 {
     // 8 is the measured maximum that fits the host's title budget: TitleText is 12px "Segoe UI"
@@ -29,28 +29,24 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
     // elements so DirectWrite falls back to Segoe UI Symbol, where U+2581..U+2588 advance
     // 11.256 px at 12 px — 8 bars = 90.0 px fits, 9 = 101.3 px already trims to "…".
     private const int BarCount = 8;
-    private const double ActiveIntervalMs = 66;   // ~15 fps while audio plays
-    private const double IdleIntervalMs = 500;    // 2 Hz once silence settles
-    private const long IdleAfterMs = 3000;        // silence duration before throttling
 
     // U+2581 LOWER ONE EIGHTH BLOCK repeated — the all-quiet frame, and the first paint.
     private static readonly string BaselineFrame = new('\u2581', BarCount);
 
+    private readonly SpectrumSource _source;
     private readonly ListItem _visualizerItem;
     private readonly IListItem[] _items;
 
-    // Render state — touched only from timer callbacks (one short tick at a time).
+    // Render state — touched only from RenderLoop ticks (serialized; loop dispose drains).
     private readonly float[] _bands = new float[BarCount];
     private readonly float[] _levels = new float[BarCount];
     private readonly char[] _frame = new char[BarCount];
     private string _lastFrame = BaselineFrame;
-    private long _lastAudioTicks;
-    private bool _idle;
 
-    // Lifecycle state — guarded by _gate (host add/remove vs. Dispose vs. render tick).
+    // Lifecycle state — guarded by _gate (host add/remove vs. Dispose).
     private readonly object _gate = new();
-    private System.Timers.Timer? _timer;
-    private SpectrumCapture? _capture;
+    private IDisposable? _lease;
+    private RenderLoop? _loop;
     private int _observers;
     private bool _disposed;
 
@@ -85,8 +81,10 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
         }
     }
 
-    public VisualizerDockBand()
+    public VisualizerDockBand(SpectrumSource source, VisualizerPage page)
     {
+        _source = source;
+
         // Dock bands require a non-empty, unique command Id or the host silently drops/conflates
         // the band.
         Id = "com.costafotiadis.visualizer.dock.spectrum";
@@ -94,12 +92,14 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
         Icon = new IconInfo("\uE8D6"); // Segoe Audio glyph — band icon in the dock's band manager
 
         // The one stable item = the one dock button. Icon deliberately blank so every pixel of the
-        // ~100 DIP title budget goes to the bars (8 block glyphs fit — see BarCount).
-        _visualizerItem = new ListItem(new OpenVolumeMixerCommand())
+        // ~100 DIP title budget goes to the bars (8 block glyphs fit — see BarCount). Its command
+        // is the page: clicking opens the palette at the big visualizer.
+        _visualizerItem = new ListItem(page)
         {
             Title = BaselineFrame,
             Subtitle = string.Empty,
             Icon = new IconInfo(string.Empty),
+            MoreCommands = [new CommandContextItem(new OpenVolumeMixerCommand())],
         };
         _items = [_visualizerItem];
     }
@@ -109,82 +109,47 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
 
     private void StartLocked()
     {
-        _capture = new SpectrumCapture();
-        _lastAudioTicks = Environment.TickCount64;
-        _idle = false;
-        _timer = new System.Timers.Timer(ActiveIntervalMs) { AutoReset = true };
-        _timer.Elapsed += (_, _) => RenderFrame();
-        _timer.Start();
+        _lease = _source.Acquire();
+        _loop = new RenderLoop("Band", RenderFrame);
     }
 
     private void StopLocked()
     {
-        _timer?.Stop();
-        _timer?.Dispose();
-        _timer = null;
-        _capture?.Dispose();
-        _capture = null;
+        // Loop first (its Dispose waits out any in-flight tick), then the lease, then the reset —
+        // so no tick can repaint over the baseline or read a dead capture.
+        _loop?.Dispose();
+        _loop = null;
+        _lease?.Dispose();
+        _lease = null;
 
-        // Reset so the next show starts from a clean baseline instead of a stale frame.
         Array.Clear(_levels);
         _lastFrame = BaselineFrame;
         _visualizerItem.Title = BaselineFrame;
     }
 
-    // Timer tick (pool thread — safe for cross-proc item mutation; TimeDate's clock band is the
-    // first-party precedent). MUST NEVER THROW: an unhandled timer exception kills the process.
-    private void RenderFrame()
+    // RenderLoop tick — pool thread (safe for cross-proc item mutation; TimeDate's clock band is
+    // the first-party precedent), exceptions handled by the loop.
+    private bool RenderFrame()
     {
-        SpectrumCapture? capture;
-        System.Timers.Timer? timer;
-        lock (_gate)
+        var hasAudio = _source.TryReadBands(_bands);
+
+        for (var i = 0; i < BarCount; i++)
         {
-            capture = _capture;
-            timer = _timer;
+            // Fast attack, exponential decay; then level → one of the 8 block glyphs.
+            var target = hasAudio ? Math.Clamp(_bands[i], 0f, 1f) : 0f;
+            _levels[i] = target > _levels[i] ? target : _levels[i] * 0.72f;
+            _frame[i] = (char)(0x2581 + (int)(_levels[i] * 7.99f));
         }
 
-        if (capture is null || timer is null)
+        // Push-only-on-change: identical frames (silence) cost nothing cross-proc.
+        var frame = new string(_frame);
+        if (!string.Equals(frame, _lastFrame, StringComparison.Ordinal))
         {
-            return;
+            _lastFrame = frame;
+            _visualizerItem.Title = frame;
         }
 
-        try
-        {
-            var hasAudio = capture.TryReadBands(_bands);
-            var now = Environment.TickCount64;
-            if (hasAudio)
-            {
-                _lastAudioTicks = now;
-            }
-
-            var idle = !hasAudio && now - _lastAudioTicks > IdleAfterMs;
-            if (idle != _idle)
-            {
-                _idle = idle;
-                timer.Interval = idle ? IdleIntervalMs : ActiveIntervalMs;
-                Log.Info("Band", idle ? "Silence — throttled to 2 Hz" : "Audio — back to 15 fps");
-            }
-
-            for (var i = 0; i < BarCount; i++)
-            {
-                // Fast attack, exponential decay; then level → one of the 8 block glyphs.
-                var target = hasAudio ? Math.Clamp(_bands[i], 0f, 1f) : 0f;
-                _levels[i] = target > _levels[i] ? target : _levels[i] * 0.72f;
-                _frame[i] = (char)(0x2581 + (int)(_levels[i] * 7.99f));
-            }
-
-            // Push-only-on-change: identical frames (silence) cost nothing cross-proc.
-            var frame = new string(_frame);
-            if (!string.Equals(frame, _lastFrame, StringComparison.Ordinal))
-            {
-                _lastFrame = frame;
-                _visualizerItem.Title = frame;
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error("Band", "Render tick failed", ex);
-        }
+        return hasAudio;
     }
 
     public void Dispose()
