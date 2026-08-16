@@ -104,13 +104,13 @@ On DC power, cap the active rate (e.g. 15 → 10 fps) via `Windows.System.Power.
 Fits the "a pinned band must not burn CPU all day" philosophy; combine with the existing idle
 throttle rather than adding a second timer-juggling path.
 
-## 9. Scrolling spectrogram view (extends item 12)
+## 9. ~~Scrolling spectrogram view~~ DONE 2026-08-16 (shipped as item 13's second style)
 
-For the palette page: a waterfall — rows = time, columns = bands, intensity via the block-glyph
-ramp (or braille, item 4). The channel question is ANSWERED by item 12's investigation
-(`notes/rendering.md`): the `PlainTextContent` monospace canvas repaints at up to ~20-24 fps
-(host-global 40 ms batch), so a spectrogram is now just another way to fill
-`VisualizerCanvasPage`'s scratch — i.e. a page render style for item 13's setting.
+Shipped as `RenderSpectrogram` in `VisualizerCanvasPage`: rows = time (newest at the bottom,
+scrolling up), columns = the same band layout as the bars (so the frequency axis applies
+unchanged), intensity = blank → shade ramp U+2591/2592/2593 → full block, fed by INSTANTANEOUS
+levels (no attack/decay smoothing). During silence zero-rows scroll in until the canvas drains
+blank, then frame dedup kicks in. Selected via the item-13 page-style setting.
 
 ## 10. Real logo: the bars ARE the brand
 
@@ -167,18 +167,20 @@ proven) character canvas:
 Pick the winner by: looks right > refresh rate > code simplicity. (The horizontal rows page is now
 the secondary entry; item 13's style setting decides whether it stays at all.)
 
-## 13. Visualizer style switch in settings (PAGE style only)
+## 13. ~~Visualizer style switch in settings~~ DONE 2026-08-16 (page style; dock needs none)
 
-The user picks the page style via the planned CmdPal settings page (JsonSettingsManager, mirror
-AgentsPanelExtension's UsageSettingsManager):
+Shipped as `Settings/VisualizerSettingsManager.cs` (JsonSettingsManager singleton mirroring
+AgentsPanelExtension's UsageSettingsManager; persisted to `visualizer.settings.json` under the
+CmdPal settings folder; `Settings = ...Instance.Settings` in the provider surfaces it in the
+palette's Settings UI). One `ChoiceSetSetting` "pageStyle": **Vertical bars with peak caps**
+(default) / **Scrolling spectrogram** (item 9). `VisualizerCanvasPage` reads it PULL-STYLE every
+tick and resets per-style render state on change — switching applies on the next frame, no
+restart. Same toolkit quirk as the reference repo: the visible field label comes from
+`Description`, not `Label`.
 
-- **Dock style needs NO setting** — resolved by item 4's verdict: each dock style is its own
-  registered band and the user pins the ones they want (blocks and braille today; a stereo-mirror
-  (item 5) or oscilloscope band would simply be added as more bands).
-- **Page style**: vertical EQ with peak caps (current, `VisualizerCanvasPage`) / horizontal rows
-  (v1, currently the context-menu entry) / oscilloscope / spectrogram (items 12, 6, 9) — i.e. the
-  Winamp set, all just different ways to fill the canvas scratch.
-- Renderers are already pure functions of the levels array, so a style is just "which render
-  function + which band count" — wire the choice as a pull-style read on each tick like the
-  reference repo's settings, no restart needed. Settings also eventually carry bar count / fps /
-  decay / idle behavior / colors (item 3) per the original plan's Step 4.
+- **Dock style needs NO setting** — item 4's verdict: each dock style is its own registered band
+  and the user pins the ones they want; future dock renderers just add bands.
+- Future styles (oscilloscope — needs `TryReadWaveform`, see item 12's north star; a canvas
+  horizontal-bars mode; stereo mirror, item 5) just extend the choice list + add a render method.
+- Still open from the original plan's Step 4: settings for bar count / fps / decay / idle
+  behavior / colors (item 3) — the settings scaffold they'll live in now exists.

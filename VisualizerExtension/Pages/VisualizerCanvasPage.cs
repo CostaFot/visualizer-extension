@@ -6,9 +6,11 @@ using Windows.Foundation;
 
 namespace VisualizerExtension;
 
-// The proper in-palette visualizer (TODO #12): classic vertical spectrum bars with slowly-falling
-// peak caps (TODO #6), drawn on a monospace character canvas. The canvas is a ContentPage with ONE
-// stable PlainTextContent — the host renders it in guaranteed monospace (Cascadia Mono/Consolas)
+// The proper in-palette visualizer (TODO #12): a monospace character canvas with user-selectable
+// fill styles (TODO #13, read pull-style from VisualizerSettingsManager on every tick — a change
+// applies on the next frame, no restart): classic vertical spectrum bars with slowly-falling peak
+// caps (TODO #6), or a scrolling spectrogram waterfall (TODO #9). The canvas is a ContentPage
+// with ONE stable PlainTextContent — the host renders it in guaranteed monospace (Cascadia Mono/Consolas)
 // and a repaint is a single TextBlock.Text assignment, no parse and no element-tree rebuild. See
 // notes/rendering.md for why every alternative (stacked list rows, markdown code block, adaptive
 // card SVG) lost.
@@ -52,6 +54,19 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
     private readonly int[] _peakHold = new int[BandCount];
     private readonly char[] _scratch = new char[(Rows * LineLength) + Columns];
     private string _lastFrame;
+
+    // Spectrogram state: a ring of the last Rows frames' instantaneous levels (row = one tick,
+    // newest at _historyHead, drawn bottom-up so fresh audio enters at the baseline).
+    private readonly float[] _history = new float[Rows * BandCount];
+    private int _historyHead;
+    private PageStyle _style = PageStyle.VerticalBars;
+
+    // Level 0..1 -> spectrogram cell intensity, blank through shades to full block
+    // (U+2591 LIGHT / U+2592 MEDIUM / U+2593 DARK SHADE / U+2588 FULL BLOCK — built from char
+    // codes so no escape sequence can be mangled in transit; all are Block Elements, covered by
+    // Cascadia Mono/Consolas with uniform advances).
+    private static readonly char[] IntensityRamp =
+        [' ', (char)0x2591, (char)0x2592, (char)0x2593, (char)0x2588];
 
     // Lifecycle state — guarded by _gate (host add/remove vs. Dispose).
     private readonly object _gate = new();
@@ -135,11 +150,21 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
         _lease?.Dispose();
         _lease = null;
 
+        ResetRenderState();
+        _lastFrame = _baselineFrame;
+        _content.Text = _baselineFrame;
+    }
+
+    // Clears all per-style render state so styles never bleed into each other (a spectrogram must
+    // not start from stale bar levels and vice versa). The scratch's bar area is fully rewritten
+    // by every style each frame, so it needs no clearing.
+    private void ResetRenderState()
+    {
         Array.Clear(_levels);
         Array.Clear(_peaks);
         Array.Clear(_peakHold);
-        _lastFrame = _baselineFrame;
-        _content.Text = _baselineFrame;
+        Array.Clear(_history);
+        _historyHead = 0;
     }
 
     // RenderLoop tick — pool thread, exceptions handled by the loop.
@@ -147,6 +172,30 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
     {
         var hasAudio = _source.TryReadBands(_bands);
 
+        // Pull-style settings read: a style change applies on this very frame.
+        var style = VisualizerSettingsManager.Instance.PageStyle;
+        if (style != _style)
+        {
+            _style = style;
+            ResetRenderState();
+        }
+
+        var frame = style == PageStyle.Spectrogram
+            ? RenderSpectrogram(hasAudio)
+            : RenderBars(hasAudio);
+
+        // Push-only-on-change: identical frames (settled silence) cost nothing cross-proc.
+        if (!string.Equals(frame, _lastFrame, StringComparison.Ordinal))
+        {
+            _lastFrame = frame;
+            _content.Text = frame;
+        }
+
+        return hasAudio;
+    }
+
+    private string RenderBars(bool hasAudio)
+    {
         for (var k = 0; k < BandCount; k++)
         {
             // Fast attack, exponential decay — same feel as the dock band.
@@ -169,15 +218,40 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
             }
         }
 
-        // Push-only-on-change: identical frames (silence) cost nothing cross-proc.
-        var frame = RenderCanvas();
-        if (!string.Equals(frame, _lastFrame, StringComparison.Ordinal))
+        return RenderCanvas();
+    }
+
+    // The waterfall (TODO #9): each tick pushes the INSTANTANEOUS levels (no attack/decay
+    // smoothing — smearing is the bars' aesthetic, not a spectrogram's) into the history ring;
+    // rows are time (newest at the bottom, scrolling up), columns stay the same band layout as
+    // the bars so the frequency axis applies unchanged, intensity is the shade ramp. During
+    // silence zero-rows keep scrolling in until the canvas drains blank, then frames dedupe.
+    private string RenderSpectrogram(bool hasAudio)
+    {
+        _historyHead = (_historyHead + 1) % Rows;
+        var newest = _historyHead * BandCount;
+        for (var k = 0; k < BandCount; k++)
         {
-            _lastFrame = frame;
-            _content.Text = frame;
+            _history[newest + k] = hasAudio ? Math.Clamp(_bands[k], 0f, 1f) : 0f;
         }
 
-        return hasAudio;
+        for (var cell = 0; cell < Rows; cell++)
+        {
+            // cell counts from the bottom (0 = newest tick); the scratch is written top first.
+            var row = ((_historyHead - cell + Rows) % Rows) * BandCount;
+            var offset = (Rows - 1 - cell) * LineLength;
+            for (var k = 0; k < BandCount; k++)
+            {
+                var glyph = IntensityRamp[(int)(_history[row + k] * 4.99f)];
+                var x = offset + (k * (BarWidth + GapWidth));
+                for (var w = 0; w < BarWidth; w++)
+                {
+                    _scratch[x + w] = glyph;
+                }
+            }
+        }
+
+        return new string(_scratch);
     }
 
     // Draws every bar into the scratch and snapshots it. Bars fill bottom-up: full blocks

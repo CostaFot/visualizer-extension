@@ -88,6 +88,18 @@
   <data name="Unit_kHz" xml:space="preserve">
     <value>{0} kHz</value>
   </data>
+  <data name="Settings_PageStyle_Label" xml:space="preserve">
+    <value>Page style</value>
+  </data>
+  <data name="Settings_PageStyle_Desc" xml:space="preserve">
+    <value>Visualizer page style</value>
+  </data>
+  <data name="Settings_PageStyle_Bars" xml:space="preserve">
+    <value>Vertical bars with peak caps</value>
+  </data>
+  <data name="Settings_PageStyle_Spectrogram" xml:space="preserve">
+    <value>Scrolling spectrogram</value>
+  </data>
   <data name="DirectLaunch_Message" xml:space="preserve">
     <value>{0} is a background extension for PowerToys Command Palette — there is nothing to launch directly. Open Command Palette and search for "{1}", or pin the Visualizer band in the Dock.</value>
   </data>

@@ -48,10 +48,17 @@ is measured and documented in `notes/rendering.md`; consult it before inventing 
 - `Pages/VisualizerCanvasPage.cs` — THE in-palette visualizer and the top-level palette entry
   (TODO #12): a `ContentPage` holding one stable `PlainTextContent`
   (`FontFamily.Monospace` — host-guaranteed Cascadia Mono/Consolas), drawn as a 2-D character
-  canvas: 20 vertical bars × 14 rows (lower-partial blocks U+2581..U+2588 = 112 vertical steps,
-  spaces are grid-safe in monospace), peak-hold caps (U+2594, hold-then-fall — TODO #6), and a
-  static frequency-axis footer. Frames mutate `_content.Text` only (push-only-on-change);
+  canvas with a static frequency-axis footer and two fill styles read pull-style from settings on
+  every tick (#13): **vertical bars** — 20 bars × 14 rows (lower-partial blocks U+2581..U+2588 =
+  112 vertical steps, spaces are grid-safe in monospace) with peak-hold caps (U+2594,
+  hold-then-fall — #6) — and **spectrogram** (#9) — rows = time scrolling up, shade-ramp
+  intensity, instantaneous levels. Frames mutate `_content.Text` only (push-only-on-change);
   `ItemsChanged` is never raised — on content pages it rebuilds the whole content control.
+- `Settings/VisualizerSettingsManager.cs` — JsonSettingsManager singleton (mirrors
+  AgentsPanelExtension's UsageSettingsManager; persists to `visualizer.settings.json`), surfaced
+  via `Settings = ...Instance.Settings` in the provider. One choice today: page style. Values are
+  read pull-style per tick — changes apply next frame, no restart. Toolkit quirk: a setting's
+  visible label is `Description`, not `Label`.
 - `Pages/VisualizerPage.cs` — the v1 rows page, kept reachable via the top-level item's context
   menu until TODO #13's style setting: one row per band, titles are horizontal bars (full U+2588
   blocks + one left-partial U+2589..U+258F tip — 256 steps), subtitles the band's frequency
@@ -156,11 +163,12 @@ disposal; the ellipsis fix (8-bar budget, measured); the in-palette `VisualizerP
 (horizontal bars — proved the palette render channel, now the secondary "rows" entry); the
 CmdPal-rendering-limits investigation (`notes/rendering.md`) and the vertical
 `VisualizerCanvasPage` with peak caps it produced (TODO #12 + #6, verified live 2026-08-16;
-visual polish deferred to the #13/#3 work); the braille dock band (#4 — verdict: both bands stay,
-pinning IS the dock style picker).
-**Next up: `notes/TODO.md`** — headline items: user-selectable visualizer styles via settings
-(#13, page style only — dock styles are bands), color exploration (#3). Also still open, from
-`notes/visualizer-extension-plan.md` Step 4: settings page (bar count, target fps, decay, idle
+visual polish deferred to the #3-era work); the braille dock band (#4 — verdict: both bands stay,
+pinning IS the dock style picker); the settings scaffold + page-style switch (#13) with the
+spectrogram style (#9).
+**Next up: `notes/TODO.md`** — headline items: color exploration (#3), stereo mirror (#5),
+oscilloscope (needs `TryReadWaveform`, see #12's north star). Also still open, from
+`notes/visualizer-extension-plan.md` Step 4: more settings (bar count, target fps, decay, idle
 behavior), Tier-1 peak-meter low-power mode as a settings choice, real PNG logo assets (current
 `Assets/` PNGs are placeholders copied from AgentsPanelExtension — replace before any release),
 `notes/releasing.md` + release workflow when it's time to ship.

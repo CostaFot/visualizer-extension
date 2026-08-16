@@ -32,6 +32,10 @@ public partial class VisualizerCommandsProvider : CommandProvider
         DisplayName = Resources.Extension_DisplayName;
         Icon = new IconInfo("\uE8D6"); // Segoe Audio glyph — replace with a PNG for the Store
 
+        // Surface the extension's settings (page style — TODO #13) in the Command Palette
+        // Settings UI. See Settings/VisualizerSettingsManager.cs.
+        Settings = VisualizerSettingsManager.Instance.Settings;
+
         _canvasPage = new VisualizerCanvasPage(_source);
         _rowsPage = new VisualizerPage(_source);
         _band = new VisualizerDockBand(

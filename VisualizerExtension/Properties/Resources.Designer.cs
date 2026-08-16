@@ -133,6 +133,42 @@ namespace VisualizerExtension.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Page style.
+        /// </summary>
+        public static string Settings_PageStyle_Label {
+            get {
+                return ResourceManager.GetString("Settings_PageStyle_Label", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Visualizer page style.
+        /// </summary>
+        public static string Settings_PageStyle_Desc {
+            get {
+                return ResourceManager.GetString("Settings_PageStyle_Desc", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Vertical bars with peak caps.
+        /// </summary>
+        public static string Settings_PageStyle_Bars {
+            get {
+                return ResourceManager.GetString("Settings_PageStyle_Bars", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Scrolling spectrogram.
+        /// </summary>
+        public static string Settings_PageStyle_Spectrogram {
+            get {
+                return ResourceManager.GetString("Settings_PageStyle_Spectrogram", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to {0} Hz.
         /// </summary>
         public static string Unit_Hz {
