@@ -105,7 +105,9 @@ palette entries and required a full uninstall to recover.)
 ## Status / roadmap
 
 Shipped in the scaffold: Tier-2 loopback+FFT band with visibility lifecycle, idle throttle, and
-disposal (the hardening the spike deliberately skipped). Still open, from
+disposal (the hardening the spike deliberately skipped). **Next up: `notes/TODO.md`** — the
+trailing-"…" ellipsis bug on the dock button, replacing the volume-mixer click with our own
+in-palette visualizer page, and color exploration (green→red peaks). Also still open, from
 `notes/visualizer-extension-plan.md` Step 4: settings page (bar count, target fps, decay, idle
 behavior), Tier-1 peak-meter low-power mode as a settings choice, SMTC "now playing"
 title/artist subtitle or second button, real PNG logo assets (current `Assets/` PNGs are
