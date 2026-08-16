@@ -2,9 +2,10 @@ using System;
 
 namespace VisualizerExtension;
 
-// The one green -> amber -> red "VU" color ramp shared by every color surface (TODO #3): the
-// VU dock band's dot icon and the rows page's level chips. Band levels are already perceptual
-// (the capture applies sqrt loudness), so a linear hue walk over the level reads right.
+// The one green -> amber -> red "VU" color ramp for every color surface — today that's the
+// VU dock band's dot icon (the removed rows page's level chips used it too). Band levels are
+// already perceptual (the capture applies sqrt loudness), so a linear hue walk over the level
+// reads right.
 //
 // Quantized to StepCount discrete steps so surfaces push color only when the step changes:
 // unlike title mutations, an icon swap or a tag reassign makes the host re-fetch and rebuild

@@ -7,7 +7,7 @@ using Windows.Storage.Streams;
 
 namespace VisualizerExtension;
 
-// TODO #11: "Test visualizer" — plays the built-in tone ladder + sweep (Audio/TestSignal.cs)
+// "Test visualizer" — plays the built-in tone ladder + sweep (Audio/TestSignal.cs)
 // through the default output so users can watch every bar respond without hunting for music.
 // Playback goes through the WinRT MediaPlayer: dependency-free, no UI affinity, and it renders to
 // the same default endpoint the loopback capture listens to, so the visualizer sees the signal by

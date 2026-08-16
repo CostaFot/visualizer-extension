@@ -2,7 +2,7 @@ using System;
 
 namespace VisualizerExtension;
 
-// TODO #11: the built-in test signal — a runtime synthesis of tools/spectrum-test.wav, same math
+// The built-in test signal — a runtime synthesis of tools/spectrum-test.wav, same math
 // as tools/generate-spectrum-test.ps1 (keep the two in sync): one 1.2 s sine tone at the
 // geometric center of each of the 8 dock bands in order (lighting one bar at a time, left to
 // right), then an 8 s logarithmic sweep 40 Hz -> 16 kHz gliding a single peak across all bars.

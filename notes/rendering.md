@@ -1,4 +1,4 @@
-# CmdPal rendering limits — what the host can actually draw (TODO #12 investigation)
+# CmdPal rendering limits — what the host can actually draw (canvas-page investigation)
 
 Investigated 2026-08-16 from the host source at `C:\Users\jarla\code\PowerToys\src\modules\cmdpal\`
 (main @ 3d0c3bdb29) plus the *installed* host (CmdPal 0.11.11762, unpacked from the MSIX under
@@ -81,7 +81,7 @@ Every alternative loses:
   unlike the dock title, where a space falls back differently and breaks the grid). **Braille
   U+2800-28FF in Cascadia Mono is unverified** — test before designing a braille page mode.
 
-## ListPage findings worth keeping (for future list work — the rows page they served was removed 2026-08-16, TODO #2)
+## ListPage findings worth keeping (the rows page they served was removed 2026-08-16)
 
 - Typing in the palette **fuzzy-filters and reorders** a plain `IListPage`'s rows against their
   titles (`ListViewModel.cs:163-214`, `:754-782`) — glyph-run titles get scrambled/dropped.
@@ -97,7 +97,7 @@ Every alternative loses:
   title (not below); empty subtitle just yields width back. ~20-22 rows fit a 1080p palette
   before scrolling/virtualization.
 
-## Color channels (TODO #3 investigation, 2026-08-16)
+## Color channels (investigated 2026-08-16)
 
 Same source tree as above. What can and cannot carry color, with evidence:
 
@@ -139,7 +139,7 @@ Same source tree as above. What can and cannot carry color, with evidence:
   rebuild their visual tree per update (see verdict above). No whole-frame color at animation
   rates; icon and tags are the only live color hooks.
 
-## Other surfaces inventoried (future options)
+## Other surfaces inventoried (none in use)
 
 - **Details pane renders markdown and updates in place**: hold a stable `IDetails` and mutate
   `Body` → `DetailsViewModel` re-fetches just that property through the normal 40 ms batch
@@ -147,10 +147,10 @@ Same source tree as above. What can and cannot carry color, with evidence:
   debounce + scroll reset (`ShellPage.xaml.cs:432-481`). A slow-rate side surface, not a canvas.
 - **Tags**: arbitrary RGBA fore/background (`idl:142-163`, `ColorHelpers`), swappable at runtime
   (rebuilt on `Tags` PropChanged, `ListItemViewModel.cs:274-295`), but max 3 visible per row —
-  TODO #3's color hook on list surfaces.
+  the color hook on list surfaces.
 - **Grid layouts** (`GridProperties`): Small 32 px icon cells / Medium 100 px / Gallery 160 px
   tiles (`ListItemsView.xaml:464-597`). Icon-only cells; a 2-D icon grid is possible but per-cell
   updates re-run `IconSource` creation — heavier than any text channel. Not virtualized
   (`WrapPanel`, `:655-662`).
 - **ImageContent** renders at original resolution (`ImageContentViewer.xaml:36`) — the
-  unconstrained static-image path (relevant to TODO #10 previews, not animation).
+  unconstrained static-image path (static pictures only, not animation).

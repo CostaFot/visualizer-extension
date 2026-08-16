@@ -1,6 +1,6 @@
 namespace VisualizerExtension;
 
-// The high-resolution spike (TODO #4): braille patterns (U+2800–U+28FF) give a 2x4 dot matrix
+// The high-resolution renderer: braille patterns (U+2800–U+28FF) give a 2x4 dot matrix
 // per character — 2 bars per glyph at 4 vertical levels each, the trick TUI tools like btop use.
 // Measured 2026-08-16 in Segoe UI Symbol (the DirectWrite fallback serving the dock's 12px
 // "Segoe UI" title): dotted braille cells advance 9.041 px → 11 cells = 99.5 px fits

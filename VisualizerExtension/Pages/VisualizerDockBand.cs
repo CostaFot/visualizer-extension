@@ -35,7 +35,7 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
     private readonly ListItem _visualizerItem;
     private readonly IListItem[] _items;
 
-    // TODO #3: the VU-dot variant gives the button a small icon whose color tracks the current
+    // The VU-dot variant gives the button a small icon whose color tracks the current
     // peak over the VuPalette ramp (dock titles have no text color — the icon is the dock's only
     // color channel). Cached IconInfo per step, pushed only when the quantized step changes; the
     // host re-fetches the icon on the item's Icon PropChanged (verified in CommandItemViewModel).

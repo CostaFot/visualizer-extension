@@ -6,8 +6,7 @@ using VisualizerExtension.Properties;
 namespace VisualizerExtension;
 
 // How VisualizerCanvasPage fills its character canvas. The dock deliberately has NO style
-// setting — each dock style is its own registered band and the user picks by pinning
-// (TODO #4 verdict).
+// setting — each dock style is its own registered band and the user picks by pinning.
 internal enum PageStyle
 {
     VerticalBars,

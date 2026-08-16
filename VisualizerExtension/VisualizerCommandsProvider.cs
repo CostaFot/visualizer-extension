@@ -12,12 +12,12 @@ public partial class VisualizerCommandsProvider : CommandProvider
     private readonly SpectrumSource _source = new();
 
     // The band is the product; the canvas page is where a dock click lands (the big in-palette
-    // vertical visualizer, TODO #12). The extension's discoverable face in the palette root is
+    // vertical visualizer). The extension's discoverable face in the palette root is
     // the hub page, which lists the canvas, the volume mixer, and settings.
-    // ALL dock bands are permanent (TODO #4 verdict — dock styles are bands, picked by pinning,
+    // ALL dock bands are permanent (dock styles are bands, picked by pinning,
     // so the dock needs no style setting): the same spectrum through the block renderer
     // (8 bars x 8 levels), the braille renderer (22 bars x 4 levels), and blocks again with the
-    // TODO #3 VU dot (a peak-colored icon — the dock's only color channel).
+    // VU dot (a peak-colored icon — the dock's only color channel).
     private readonly VisualizerCanvasPage _canvasPage;
     private readonly VisualizerHubPage _hubPage;
     private readonly VisualizerDockBand _band;
@@ -33,7 +33,7 @@ public partial class VisualizerCommandsProvider : CommandProvider
         DisplayName = Resources.Extension_DisplayName;
         Icon = new IconInfo("\uE8D6"); // Segoe Audio glyph — replace with a PNG for the Store
 
-        // Surface the extension's settings (page style — TODO #13) in the Command Palette
+        // Surface the extension's settings (page style) in the Command Palette
         // Settings UI. See Settings/VisualizerSettingsManager.cs.
         Settings = VisualizerSettingsManager.Instance.Settings;
 

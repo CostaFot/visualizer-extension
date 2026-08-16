@@ -6,11 +6,10 @@ using Windows.Foundation;
 
 namespace VisualizerExtension;
 
-// The proper in-palette visualizer (TODO #12): a monospace character canvas with user-selectable
-// fill styles (TODO #13, read pull-style from VisualizerSettingsManager on every tick — a change
+// The proper in-palette visualizer: a monospace character canvas with user-selectable
+// fill styles (read pull-style from VisualizerSettingsManager on every tick — a change
 // applies on the next frame, no restart): classic vertical spectrum bars with slowly-falling peak
-// caps (TODO #6), or a Winamp-style oscilloscope
-// trace (TODO #14). The canvas is a ContentPage
+// caps, or a Winamp-style oscilloscope trace. The canvas is a ContentPage
 // with ONE stable PlainTextContent — the host renders it in guaranteed monospace (Cascadia Mono/Consolas)
 // and a repaint is a single TextBlock.Text assignment, no parse and no element-tree rebuild. See
 // notes/rendering.md for why every alternative (stacked list rows, markdown code block, adaptive
@@ -218,7 +217,7 @@ internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsCh
         return RenderCanvas();
     }
 
-    // The oscilloscope (TODO #14, from #12's Winamp north star): the newest ~21 ms of raw
+    // The oscilloscope (the Winamp waveform trace): the newest ~21 ms of raw
     // waveform (SpectrumSource.TryReadWaveform, one sample per canvas column) drawn as a
     // connected trace on the same LED-matrix grid as the bars — each column lights its sample's
     // cell plus the vertical run bridging to the previous column, because a bare one-cell-per-
