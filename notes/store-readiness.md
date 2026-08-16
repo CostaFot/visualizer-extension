@@ -143,7 +143,12 @@ certification with the same value.
   (CN already matches the manifest), set `SIGNING_CERT_PFX` + `SIGNING_CERT_PASSWORD` repo
   secrets (none set as of the audit), back up the pfx + password (git-ignored). Cert expiry ~1
   year — note the re-run date. Later, for WinGet: `WINGET_TOKEN` (classic PAT, public_repo).
-- [ ] **E15 [user] Screenshots → `listing/`.** Framed-on-gradient like AgentsPanel's `listing/`:
+- [x] **E15 [user] Screenshots → `listing/`.** *(done 2026-08-16 — raws as `base_screenshot_*`,
+  framed-on-gradient `screenshot_*` (dock strips 7200×2400 3:1 ×3 styles, 16:9 canvas/scope/hub/
+  settings, band manager 2400²), plus Store-ready downscales in `listing/store/` (≤3840×2160:
+  dock 3840×1280, 16:9 3840×2160, bands 2160²) — Partner Center uploads come from `store/`, the
+  README uses the full-size set. Known nit: `screenshot_bands.png` clips the "Claude" row at the
+  top edge.)* Framed-on-gradient like AgentsPanel's `listing/`:
   the pinned dock band strip (hero, 3:1), the Dock band manager showing all three styles, the
   canvas page in bars style, the oscilloscope style, the hub page (16:9 Store-ready). Keep raw
   captures as `base_screenshot_*`. Store ceiling is 3840×2160 — downscale/pad the wide strip.
