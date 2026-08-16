@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "VisualizerExtension (Package)": {
+      "commandName": "MsixPackage",
+      "doNotLaunchApp": true
+    },
+    "VisualizerExtension (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
