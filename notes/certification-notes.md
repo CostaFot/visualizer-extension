@@ -50,6 +50,5 @@ https://costafot.github.io/visualizer-extension/privacy.html
 
 Notes to self (not for the reviewer):
 
-- ⚠️ The privacy URL above is NOT live yet — GitHub Pages must be enabled and `deploy-pages.yml`
-  run first (B4 [user] / E13). Verify the page serves the real policy before submitting
-  (AgentsPanel's notes record doing exactly this check on 2026-08-14).
+- The privacy URL above was verified live 2026-08-16 (Pages enabled + deployed; all three pages
+  and style.css serve 200, and privacy.html serves the real policy).

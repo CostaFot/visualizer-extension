@@ -47,8 +47,8 @@ certification with the same value.
 
 ## B. Certification blockers — content & legal
 
-- [x] **B4 [agent] Hosted privacy policy + terms.** *(agent part done 2026-08-16 — `docs/` written;
-  [user] still to enable GitHub Pages once E13's deploy workflow is pushed.)* Partner Center requires a privacy-policy URL.
+- [x] **B4 [agent] Hosted privacy policy + terms.** *(DONE 2026-08-16 — `docs/` written, Pages
+  enabled and deployed; privacy URL verified live serving the real policy.)* Partner Center requires a privacy-policy URL.
   Create `docs/{index,privacy,terms}.html` + `style.css` modeled on AgentsPanel's `docs/`,
   adapted to this app's much simpler story: audio is captured via WASAPI loopback of the default
   output device, processed entirely in memory, never recorded, stored, or transmitted; **no
