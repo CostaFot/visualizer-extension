@@ -85,6 +85,9 @@
   <data name="Band_Title_Braille" xml:space="preserve">
     <value>Visualizer (braille)</value>
   </data>
+  <data name="Band_Title_Vu" xml:space="preserve">
+    <value>Visualizer (blocks + VU)</value>
+  </data>
   <data name="Action_OpenVolumeMixer" xml:space="preserve">
     <value>Open volume mixer</value>
   </data>

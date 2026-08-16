@@ -35,10 +35,17 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
     private readonly ListItem _visualizerItem;
     private readonly IListItem[] _items;
 
+    // TODO #3: the VU-dot variant gives the button a small icon whose color tracks the current
+    // peak over the VuPalette ramp (dock titles have no text color — the icon is the dock's only
+    // color channel). Cached IconInfo per step, pushed only when the quantized step changes; the
+    // host re-fetches the icon on the item's Icon PropChanged (verified in CommandItemViewModel).
+    private readonly bool _vuDot;
+
     // Render state — touched only from RenderLoop ticks (serialized; loop dispose drains).
     private readonly float[] _bands;
     private readonly float[] _levels;
     private string _lastFrame;
+    private int _dotStep;
 
     // Lifecycle state — guarded by _gate (host add/remove vs. Dispose).
     private readonly object _gate = new();
@@ -78,10 +85,11 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
         }
     }
 
-    public VisualizerDockBand(SpectrumSource source, ICommand page, ISpectrumRenderer renderer, string id, string title)
+    public VisualizerDockBand(SpectrumSource source, ICommand page, ISpectrumRenderer renderer, string id, string title, bool vuDot = false)
     {
         _source = source;
         _renderer = renderer;
+        _vuDot = vuDot;
         _bands = new float[renderer.BarCount];
         _levels = new float[renderer.BarCount];
         _lastFrame = renderer.Baseline;
@@ -92,14 +100,16 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
         Title = title;
         Icon = new IconInfo("\uE8D6"); // Segoe Audio glyph — band icon in the dock's band manager
 
-        // The one stable item = the one dock button. Icon deliberately blank so every pixel of the
-        // ~100 DIP title budget goes to the bars (each renderer sizes itself to that budget). Its
-        // command is the page: clicking opens the palette at the big visualizer.
+        // The one stable item = the one dock button. Icon blank on the plain bands so every pixel
+        // of the ~100 DIP title budget goes to the bars (each renderer sizes itself to that
+        // budget); the VU band instead carries the step-0 dot from the first paint, so showing
+        // color never changes the button's width. Its command is the page: clicking opens the
+        // palette at the big visualizer.
         _visualizerItem = new ListItem(page)
         {
             Title = renderer.Baseline,
             Subtitle = string.Empty,
-            Icon = new IconInfo(string.Empty),
+            Icon = vuDot ? VuDotIcons.Icon(0) : new IconInfo(string.Empty),
             MoreCommands = [new CommandContextItem(new OpenVolumeMixerCommand())],
         };
         _items = [_visualizerItem];
@@ -126,6 +136,11 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
         Array.Clear(_levels);
         _lastFrame = _renderer.Baseline;
         _visualizerItem.Title = _renderer.Baseline;
+        if (_vuDot && _dotStep != 0)
+        {
+            _dotStep = 0;
+            _visualizerItem.Icon = VuDotIcons.Icon(0);
+        }
     }
 
     // RenderLoop tick — pool thread (safe for cross-proc item mutation; TimeDate's clock band is
@@ -147,6 +162,24 @@ internal sealed partial class VisualizerDockBand : ListPage, INotifyItemsChanged
         {
             _lastFrame = frame;
             _visualizerItem.Title = frame;
+        }
+
+        // The VU dot follows the loudest band; same push-only-on-change idea, with the palette's
+        // quantization keeping icon swaps to a handful per second.
+        if (_vuDot)
+        {
+            var peak = 0f;
+            for (var i = 0; i < _levels.Length; i++)
+            {
+                peak = Math.Max(peak, _levels[i]);
+            }
+
+            var step = VuPalette.StepFor(peak);
+            if (step != _dotStep)
+            {
+                _dotStep = step;
+                _visualizerItem.Icon = VuDotIcons.Icon(step);
+            }
         }
 
         return hasAudio;

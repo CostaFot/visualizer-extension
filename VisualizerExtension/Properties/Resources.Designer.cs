@@ -97,6 +97,15 @@ namespace VisualizerExtension.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Visualizer (blocks + VU).
+        /// </summary>
+        public static string Band_Title_Vu {
+            get {
+                return ResourceManager.GetString("Band_Title_Vu", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Visualizer.
         /// </summary>
         public static string Command_Visualizer {

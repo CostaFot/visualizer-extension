@@ -42,9 +42,12 @@ is measured and documented in `notes/rendering.md`; consult it before inventing 
 - `Pages/VisualizerDockBand.cs` — the band (from `GetDockBands()`, wrapped in a `CommandItem`).
   ONE item, 8 vertical block glyphs (U+2581..U+2588) — 8 is the measured title-budget max, see
   Gotchas. Click opens `VisualizerCanvasPage`; volume mixer is a `MoreCommands` right-click
-  action. TWO bands are registered permanently — block bars (8×8) and braille (22×4): the user
-  picks the dock style by pinning either or both from the Dock's band manager (TODO #4 verdict —
-  dock styles are bands, not settings; future dock renderers just add bands).
+  action. THREE bands are registered permanently — block bars (8×8), braille (22×4), and
+  blocks + VU dot (#3: a 16-step green→red peak-colored icon, `Rendering/VuPalette.cs` +
+  pre-baked in-memory PNG dots as stream-backed IconData in `Rendering/VuDotIcons.cs` — data-URI
+  icons don't render, see Gotchas): the user picks the dock style by
+  pinning any of them from the Dock's band manager (TODO #4 verdict — dock styles are bands, not
+  settings; future dock renderers just add bands).
 - `Pages/VisualizerHubPage.cs` — the top-level palette entry: a static `ListPage` menu (mirrors
   AgentsPanelExtension's UsagePage shape, minus the live state) listing the canvas, the rows
   page, the volume mixer, and the settings form. No lifecycle, no lease — pages acquire their
@@ -65,9 +68,10 @@ is measured and documented in `notes/rendering.md`; consult it before inventing 
   read pull-style per tick — changes apply next frame, no restart. Toolkit quirk: a setting's
   visible label is `Description`, not `Label`.
 - `Pages/VisualizerPage.cs` — the v1 rows page, kept reachable via the top-level item's context
-  menu until TODO #13's style setting: one row per band, titles are horizontal bars (full U+2588
-  blocks + one left-partial U+2589..U+258F tip — 256 steps), subtitles the band's frequency
-  range. A `DynamicListPage` that ignores search text — a plain `ListPage`'s rows get
+  menu until TODO #13's style setting: one row per band — title is the band's frequency range,
+  subtitle (rendered beside/after the title, so the static label never shifts as the bar
+  breathes) is the horizontal bar (full U+2588 blocks + one left-partial U+2589..U+258F tip —
+  256 steps), plus a VuPalette color chip tag (#3). A `DynamicListPage` that ignores search text — a plain `ListPage`'s rows get
   fuzzy-filtered/reordered the moment the user types.
 - `Helpers/RenderLoop.cs` — the shared pump: ~15 fps timer, **idle throttle** (2 Hz after ~3 s of
   silence, still sampling → snaps back on audio; a pinned band must not burn CPU all day),
@@ -149,9 +153,14 @@ Playing audio is fine and expected; deploying the extension remains the user's j
 - ⚠️ **Timer callbacks and the capture thread must never throw** — an unhandled exception on
   either kills the extension process. `RenderFrame` is wrapped; the capture loop catches
   `COMException`/`InvalidOperationException` and rebinds.
-- ⚠️ **`data:image/svg+xml` URIs do NOT work as icons** (the host sniffs the URI *extension* for
-  `.svg`); file paths ending in `.svg` render as vector, PNG data URIs and http URLs work, emoji
-  give color.
+- ⚠️ **`data:` URIs do NOT work as icons — ANY of them, PNG included** (corrected 2026-08-16
+  after the VU dot shipped blank: the host's IconPathConverter feeds the URI to WinUI 3
+  `BitmapImage.UriSource`, which doesn't support the `data:` scheme — it fails *asynchronously*,
+  so no fallback fires and the icon renders as nothing). File paths ending in `.svg` render as
+  vector, http URLs work, emoji give color; for generated in-memory images use **stream-backed
+  `IconData` (`IRandomAccessStreamReference`)** with the icon STRING left empty (a non-empty
+  string wins over the stream in the host loader) — that's the channel `Rendering/VuDotIcons.cs`
+  uses. Evidence in `notes/rendering.md` § "Color channels".
 - ⚠️ **The dock title budget is exactly 8 block glyphs** (measured 2026-08-16, fixing the
   trailing-"…" bug): the host's TitleText is 12px "Segoe UI", `MaxWidth=100`, CharacterEllipsis;
   Segoe UI has no Block Elements so DirectWrite falls back to **Segoe UI Symbol** where
@@ -173,8 +182,13 @@ pinning IS the dock style picker); the settings scaffold + page-style switch (#1
 oscilloscope page style (#14 — `TryReadWaveform` on the capture +
 a blocks-pen connected trace, braille pen deliberately skipped as unverified in Cascadia Mono).
 The spectrogram style (#9) shipped 2026-08-16 and was REMOVED the same day — the user didn't
-like it; don't re-propose it.
-**Next up: `notes/TODO.md`** — headline items: color exploration (#3), stereo mirror (#5).
+like it; don't re-propose it. Color (#3) shipped 2026-08-16: the shared `VuPalette` ramp, the
+third "blocks + VU dot" dock band, and the rows page's per-band color chips — with the verdicts
+that the plain-text canvas CANNOT be colored and `Page.AccentColor` is host-ignored
+(`notes/rendering.md` § "Color channels"). User verdict on the VU dot: not a fan visually, but
+kept on purpose as the live proof that a dock band's icon can change at will — reference
+infrastructure (e.g. for #7's beat pulse), not a look to iterate on.
+**Next up: `notes/TODO.md`** — headline item: stereo mirror (#5).
 Also still open, from
 `notes/visualizer-extension-plan.md` Step 4: more settings (bar count, target fps, decay, idle
 behavior), Tier-1 peak-meter low-power mode as a settings choice, real PNG logo assets (current

@@ -33,20 +33,48 @@ De-risked before building: the palette's `ListItemViewModel` handles per-item Ti
 to verify live: actual page refresh smoothness at 15 fps (mechanism exists; rate unproven).
 The `ContentPage`/Markdown 2-D spectrum idea stays open under item 9.
 
-## 3. Color customization (e.g. green → red toward peak)
+## 3. ~~Color customization (e.g. green → red toward peak)~~ DONE 2026-08-16 (VU dot band + rows chips)
 
-Explore color, with eyes open about host constraints (all verified in the plan/spike notes):
-- **Dock button titles have NO text color** — no rich text, no per-char color in the title run.
-  Color in the dock can only come from the item **icon** (emoji give color; PNG data URIs work;
-  SVG data URIs do NOT) — e.g. a small colored dot/emoji icon that shifts green→amber→red with the
-  current peak while the bars stay monochrome.
-- **In our own palette page** (item 2) there's more room: list item **tags** have color support in
-  the toolkit, and a ContentPage could color via Markdown-supported constructs. A green→red
-  gradient across bands, or whole-frame color by loudness, becomes feasible there.
-- If we generate tiny PNG data-URI icons on the fly for color, cache the generated URIs per color
-  step (don't allocate per frame) and keep push-only-on-change semantics.
-- Color choice (theme, gradient on/off) is a natural future settings-page entry alongside bar
-  count / fps / decay.
+Shipped, after a host-source investigation pass (channel evidence recorded in
+`notes/rendering.md` § "Color channels"):
+
+- **`Rendering/VuPalette.cs`** — the one green→amber→red ramp (linear hue walk 120°→0°,
+  16 quantized steps; step 0 is a dim "off LED" that silence decays to). The quantization IS the
+  throttle: color surfaces push only on step change, because unlike title mutations an icon swap
+  or tag reassign makes the host rebuild view-model state cross-proc.
+- **Dock: third band "Visualizer (blocks + VU)"** (`com.costafotiadis.visualizer.dock.spectrum.vu`,
+  blocks renderer + `vuDot: true`) — a 16 DIP dot icon colored by the loudest band's level.
+  Shipping as a band (not a change to the existing ones) follows the #4 verdict: pin it next to
+  the plain band, judge live, unpin the loser. `Rendering/VuDotIcons.cs` pre-bakes one
+  32×32 anti-aliased disc PNG per palette step via a minimal built-in PNG writer (RGBA8, zlib
+  stored block — no image dependency), delivered as **stream-backed `IconData`** — the first cut
+  used `data:image/png;base64` URIs and deployed as a BLANK icon: data URIs don't work as icons
+  at all, the host feeds them to `BitmapImage.UriSource` which rejects the scheme asynchronously
+  (AGENTS.md gotcha corrected; evidence in rendering.md § "Color channels"). Cached `IconInfo`
+  instances, step 0 present from first paint so the button width never changes.
+- **Rows page: level chips** — each row carries one tag whose fore+background are the band's
+  palette color (foreground == background makes the fixed U+25CF text read as a solid swatch —
+  an empty-text tag collapses to a sliver). One cached single-tag array per step, shared by all
+  rows.
+
+Findings that CLOSE this item's open ideas (measured/verified in host source, see rendering.md):
+- **The canvas page cannot be colored, period.** `PlainTextContent` is one monochrome `TextBlock`;
+  the "Markdown constructs" idea died with the per-frame re-parse finding (#12), and
+  `Page.AccentColor` (toolkit `Page.cs:13`) is SDK-spec'd but never read by the host. Whole-frame
+  color by loudness is off the table until the host grows a colored text channel.
+- **Live dock icon updates are host-supported**: `CommandItemViewModel` re-fetches on the item's
+  `Icon` PropChanged. **Tag updates are not per-tag**: `TagViewModel` reads once, so the only
+  update path is reassigning the row's `Tags` array (rebuilds that row's tag VMs).
+
+**User verdict (2026-08-16, after living with it):** the VU dot is a shrug — it doesn't add much
+visually and the user is not a fan, but it STAYS, deliberately, as the working proof that a dock
+band's icon can be swapped at will at runtime (first time that channel was exercised live).
+Treat it as reference infrastructure, not a look to build on: don't propose more dot-style
+cosmetics, but the live-icon channel is proven ground for future ideas (e.g. item 7's beat-pulse
+icon).
+
+Still-future color work: beat-keyed color (item 7), and a settings entry (palette choice /
+color on-off) alongside the planned bar count / fps / decay settings.
 
 ## 4. ~~Braille rendering spike~~ VERDICT 2026-08-16: keep BOTH bands
 

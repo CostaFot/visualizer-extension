@@ -97,6 +97,48 @@ Every alternative loses:
   title (not below); empty subtitle just yields width back. ~20-22 rows fit a 1080p palette
   before scrolling/virtualization.
 
+## Color channels (TODO #3 investigation, 2026-08-16)
+
+Same source tree as above. What can and cannot carry color, with evidence:
+
+- **Dock item icons update live**: `CommandItemViewModel.Model_PropChanged` handles
+  `case nameof(Icon)` (`CommandItemViewModel.cs:386-397`) — re-fetches `model.Icon`, builds and
+  initializes a fresh `IconInfoViewModel`, raises `Icon`; `DockControl.xaml:46-53` binds it
+  `Mode=OneWay` into a 16 DIP `IconBox` and `DockItemControl` reacts to icon changes. So a dock
+  button icon IS a live color channel — but each swap is a cross-proc icon re-fetch + VM rebuild,
+  not a cheap property write like Title: quantize colors and push only on change (the VU band
+  uses 16 cached stream-backed `IconInfo`s).
+- **`data:` URIs are DEAD as icons — including PNG** (deployed blank 2026-08-16, then traced):
+  string icons flow `IconLoaderService.LoadIconCoreAsync` → `IconPathConverter.IconSourceMUX`
+  (`IconLoaderService.cs:218-224`) → `_getColoredBitmapIcon`, which hands the parsed URI straight
+  to `BitmapImage.UriSource` (`Microsoft.Terminal.UI/IconPathConverter.cpp:131-140`). WinUI 3
+  `BitmapImage` does not support the `data:` scheme there, and the failure is asynchronous
+  (`ImageFailed`, not a throw) — so the font-glyph fallback never runs and the icon renders as
+  nothing. This corrects the spike-era "PNG data URIs work" note (that was likely measured on the
+  markdown image path, which has its own `DataImageSourceProvider` — markdown ≠ icons).
+  **The working channel for generated images is stream-backed `IconData`**: give the toolkit
+  `IconData` an `IRandomAccessStreamReference` and keep its `Icon` string EMPTY — a non-empty
+  string wins over `Data` (`IconLoaderService.cs:162-167` checks the string first); the stream
+  branch (`:169-196`) does `OpenReadAsync` + `BitmapImage.SetSourceAsync`, which decodes raw PNG
+  bytes fine. `IconDataViewModel.HasIcon` counts `Data` (`IconDataViewModel.cs:20`), and the
+  host's icon cache keys stream icons by reference identity
+  (`CachedIconSourceProvider.cs:100-108`) — distinct per-color stream references cannot collide
+  into one cached bitmap.
+- **Tags color, but rebuild-on-write**: `TagViewModel` reads Text/Foreground/Background/Icon ONCE
+  in `InitializeProperties` and never subscribes to the tag's PropChanged (`TagViewModel.cs`);
+  the only update path is reassigning the item's `Tags` array, which rebuilds all of that row's
+  tag view models (`ListItemViewModel.UpdateTags`, `ListItemViewModel.cs:274-297`). Same rule:
+  cache tag instances per color step, reassign only on step change. Also: a tag with empty text
+  collapses to a padding-only sliver (`Controls/Tag.xaml` — 4,2,4,2 padding around an empty
+  TextBlock); give a color-swatch tag a fixed one-char text inked in the background color.
+- **`Page.AccentColor` is dead**: spec'd in the SDK (`initial-sdk-spec.md:742`, toolkit
+  `Page.cs:13`) but the host never reads a page's AccentColor — every host-side "AccentColor" hit
+  is its own theming settings. Don't design against it.
+- **The plain-text canvas stays monochrome**: the `PlainTextContentViewer` `TextBlock` has no
+  extension-reachable foreground, and the colored ContentPage channels (markdown, adaptive cards)
+  rebuild their visual tree per update (see verdict above). No whole-frame color at animation
+  rates; icon and tags are the only live color hooks.
+
 ## Other surfaces inventoried (future options)
 
 - **Details pane renders markdown and updates in place**: hold a stable `IDetails` and mutate

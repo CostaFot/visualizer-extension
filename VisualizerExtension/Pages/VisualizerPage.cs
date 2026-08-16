@@ -6,14 +6,15 @@ using Windows.Foundation;
 
 namespace VisualizerExtension;
 
-// The big in-palette visualizer: one row per frequency band, each row's title a smooth horizontal
-// bar growing left to right. Opened by clicking the dock band's button (a page command on a dock
-// button opens the palette at that page) or from the extension's top-level command.
+// The v1 rows visualizer: one row per frequency band — static frequency label (title) first,
+// then a smooth horizontal bar growing left to right (subtitle: the palette renders it BESIDE
+// the title, after it, so the moving edge is always the row's last text and the label never
+// shifts), then the band's color chip (tag).
 //
 // Rendering rides the SAME per-item mutation channel as the dock band: stable ListItem instances,
-// mutate .Title per frame, push-only-on-change, ItemsChanged never raised — the palette's
-// ListItemViewModel handles per-item Title property changes and repaints just that row (verified
-// in the host source). Bars are built from Block Elements: full blocks U+2588 plus one LEFT
+// mutate .Subtitle per frame, push-only-on-change, ItemsChanged never raised — the palette's
+// ListItemViewModel handles per-item Title/Subtitle property changes and repaints just that row
+// (verified in the host source). Bars are built from Block Elements: full blocks U+2588 plus one LEFT
 // partial block U+2589..U+258F as the fractional tip. In Segoe UI Symbol (the DirectWrite
 // fallback that serves these) the partial glyphs' advances are proportional to their ink
 // (measured 2026-08-16: 0.109em..0.938em), so bar length tracks the level continuously —
@@ -36,8 +37,17 @@ internal sealed partial class VisualizerPage : DynamicListPage, INotifyItemsChan
     private const float MaxFrequency = 16000f;
 
     // U+258F LEFT ONE EIGHTH BLOCK — the all-quiet sliver every bar decays to (never an empty
-    // string: a row whose title vanishes would collapse its text block).
+    // string: an empty subtitle collapses and the row would reflow when the bar reappears).
     private const string BaselineBar = "\u258F";
+
+    // TODO #3: each row carries one tag as a color chip running the VuPalette ramp with the
+    // band's level — one cached single-tag array per step, shared by every row (the host builds
+    // its own per-row tag view models from these; the Tag models are only ever read). The chip
+    // glyph is inked in the pill's own background color so it reads as a solid swatch, while
+    // keeping the tag a stable width (an empty-text tag collapses to a sliver). Reassigning
+    // .Tags makes the host rebuild that row's tag view models (TagViewModel reads once — there
+    // is no per-tag property channel), so chips update push-only-on-step-change.
+    private static readonly ITag[][] LevelTags = BuildLevelTags();
 
     private readonly SpectrumSource _source;
     private readonly ListItem[] _rows;
@@ -47,6 +57,7 @@ internal sealed partial class VisualizerPage : DynamicListPage, INotifyItemsChan
     private readonly float[] _bands = new float[BandCount];
     private readonly float[] _levels = new float[BandCount];
     private readonly string[] _lastFrames = new string[BandCount];
+    private readonly int[] _tagSteps = new int[BandCount];
     private readonly char[] _scratch = new char[CellCount];
 
     // Lifecycle state — guarded by _gate (host add/remove vs. Dispose).
@@ -95,11 +106,15 @@ internal sealed partial class VisualizerPage : DynamicListPage, INotifyItemsChan
         _rows = new ListItem[BandCount];
         for (var k = 0; k < BandCount; k++)
         {
+            // Label first, bar second: the title is the static frequency label and the SUBTITLE
+            // carries the animated bar (the palette renders the subtitle beside the title, after
+            // it) — with the bar first, the label slid left/right on every width change.
             _rows[k] = new ListItem(noOp)
             {
-                Title = BaselineBar,
-                Subtitle = BandLabel(k),
+                Title = BandLabel(k),
+                Subtitle = BaselineBar,
                 Icon = new IconInfo(string.Empty),
+                Tags = LevelTags[0],
             };
             _lastFrames[k] = BaselineBar;
         }
@@ -134,7 +149,12 @@ internal sealed partial class VisualizerPage : DynamicListPage, INotifyItemsChan
         for (var k = 0; k < BandCount; k++)
         {
             _lastFrames[k] = BaselineBar;
-            _rows[k].Title = BaselineBar;
+            _rows[k].Subtitle = BaselineBar;
+            if (_tagSteps[k] != 0)
+            {
+                _tagSteps[k] = 0;
+                _rows[k].Tags = LevelTags[0];
+            }
         }
     }
 
@@ -152,7 +172,14 @@ internal sealed partial class VisualizerPage : DynamicListPage, INotifyItemsChan
             if (!string.Equals(frame, _lastFrames[k], StringComparison.Ordinal))
             {
                 _lastFrames[k] = frame;
-                _rows[k].Title = frame;
+                _rows[k].Subtitle = frame;
+            }
+
+            var step = VuPalette.StepFor(_levels[k]);
+            if (step != _tagSteps[k])
+            {
+                _tagSteps[k] = step;
+                _rows[k].Tags = LevelTags[step];
             }
         }
 
@@ -187,6 +214,24 @@ internal sealed partial class VisualizerPage : DynamicListPage, INotifyItemsChan
         var lo = MinFrequency * MathF.Pow(MaxFrequency / MinFrequency, (float)band / BandCount);
         var hi = MinFrequency * MathF.Pow(MaxFrequency / MinFrequency, (float)(band + 1) / BandCount);
         return Strings.Format(Resources.Band_Range, FormatFrequency(lo), FormatFrequency(hi));
+    }
+
+    private static ITag[][] BuildLevelTags()
+    {
+        // U+25CF BLACK CIRCLE — never rendered as ink (foreground == background), it only gives
+        // the chip its fixed width. Built from the code point, not an escape (see AGENTS.md on
+        // tooling mangling glyph escapes).
+        var chip = ((char)0x25CF).ToString();
+
+        var sets = new ITag[VuPalette.StepCount][];
+        for (var step = 0; step < sets.Length; step++)
+        {
+            var (r, g, b) = VuPalette.Rgb(step);
+            var color = ColorHelpers.FromRgb(r, g, b);
+            sets[step] = [new Tag(chip) { Foreground = color, Background = color }];
+        }
+
+        return sets;
     }
 
     private static string FormatFrequency(float hz) =>
