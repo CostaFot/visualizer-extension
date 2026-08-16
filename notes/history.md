@@ -51,6 +51,7 @@ them).
 
 ## Release status
 
-Never released, and no release is planned. If that ever changes: the `Assets/` PNGs are still
-placeholders copied from AgentsPanelExtension and must be replaced first, and the release flow
-lives in MarketExtension's `notes/releasing.md`.
+Never released as of 2026-08-16. Later the same day the user decided to pursue a release —
+tracked in `store-readiness.md` (the `Assets/` PNGs are still placeholders copied from
+AgentsPanelExtension and are the biggest blocker; the pipeline follows MarketExtension's
+`notes/releasing.md` as proven again by AgentsPanelExtension).

@@ -3,8 +3,9 @@
 Single source of truth for coding agents (Claude Code, Codex, …) working in this repo — CLAUDE.md
 just imports this file. Deep detail lives in `notes/`: the rendering evidence in
 `notes/rendering.md` (read it before touching any render surface), the original build plan (spike
-history, gotcha back-story) in `notes/visualizer-extension-plan.md`, and the development record
-(what shipped, what was removed or cancelled, and why) in `notes/history.md`.
+history, gotcha back-story) in `notes/visualizer-extension-plan.md`, the development record
+(what shipped, what was removed or cancelled, and why) in `notes/history.md`, and the release
+checklist in `notes/store-readiness.md`.
 
 A PowerToys **Command Palette** extension whose whole product is one pinnable **Dock band**: a live
 audio spectrum visualizer for whatever the machine is playing. WASAPI **loopback** capture of the
@@ -15,17 +16,19 @@ default render endpoint (no microphone, no per-app hooks, no audio dependencies)
 (`Directory.Packages.props`) — the first with `PlainTextContent`, which the canvas page needs;
 minimum host is therefore CmdPal 0.11.
 
-## Status: FEATURE-COMPLETE — maintenance only
+## Status: FEATURE-COMPLETE — maintenance + release prep
 
-Declared done 2026-08-16; no open roadmap (the TODO list was closed out and deleted). Remaining
-work is bug fixes and host-compat breakage only. Don't propose new features, and don't resurrect
-removed or cancelled ones — the horizontal-rows page, the spectrogram page style, beat detection,
-stereo mirror, the battery-aware throttle, and extra settings (bar count / fps / decay / idle) are
-all dead; verdicts in `notes/history.md`. **This is NOT a media-player app**: no SMTC — no
-now-playing metadata, album art, or transport controls (MediaControlsExtension's turf; the plan
-note predates this decision and still mentions SMTC). Never released, no release planned — if that
-ever changes, the `Assets/` PNGs are placeholders from AgentsPanelExtension and must be replaced
-first; release flow in MarketExtension's `notes/releasing.md`.
+Feature work declared done 2026-08-16; no feature roadmap (the TODO list was closed out and
+deleted). Don't propose new features, and don't resurrect removed or cancelled ones — the
+horizontal-rows page, the spectrogram page style, beat detection, stereo mirror, the battery-aware
+throttle, and extra settings (bar count / fps / decay / idle) are all dead; verdicts in
+`notes/history.md`. **This is NOT a media-player app**: no SMTC — no now-playing metadata, album
+art, or transport controls (MediaControlsExtension's turf; the plan note predates this decision
+and still mentions SMTC). Open work is (a) bug fixes / host-compat breakage and (b) **getting the
+app released** — the full checklist (Store + GitHub Releases + WinGet, following the reference
+repos' twice-proven pipeline) lives in `notes/store-readiness.md`; work items from it, in order,
+respecting its [user]/[agent] tags. Biggest blocker: the `Assets/` PNGs are still placeholders
+copied from AgentsPanelExtension.
 
 ## Reference projects — use them A LOT
 
