@@ -27,8 +27,8 @@ namespace VisualizerExtension;
 // RenderLoop live from first observer to last.
 internal sealed partial class VisualizerCanvasPage : ContentPage, INotifyItemsChanged, IDisposable
 {
-    private const int BandCount = 20;
-    private const int Rows = 14;      // vertical cells; 8 sub-steps each = 112 vertical steps
+    private const int BandCount = 30;
+    private const int Rows = 20;      // vertical cells; 8 sub-steps each = 160 vertical steps
     private const int BarWidth = 2;   // glyph cells of ink per bar
     private const int GapWidth = 1;   // blank cells between bars (spaces are safe in monospace)
     private const int Columns = (BandCount * (BarWidth + GapWidth)) - GapWidth;

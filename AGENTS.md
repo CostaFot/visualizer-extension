@@ -53,8 +53,9 @@ is measured and documented in `notes/rendering.md`; consult it before inventing 
   (TODO #12): a `ContentPage` holding one stable `PlainTextContent`
   (`FontFamily.Monospace` — host-guaranteed Cascadia Mono/Consolas), drawn as a 2-D character
   canvas with a static per-style footer (frequency axis; blank for the scope) and two fill
-  styles read pull-style from settings on every tick (#13): **vertical bars** — 20 bars × 14 rows
-  (lower-partial blocks U+2581..U+2588 = 112 vertical steps, spaces are grid-safe in monospace)
+  styles read pull-style from settings on every tick (#13): **vertical bars** — 30 bars × 20 rows
+  (sized to fill the default 800×480 palette window; lower-partial blocks U+2581..U+2588 =
+  160 vertical steps, spaces are grid-safe in monospace)
   with peak-hold caps (U+2594, hold-then-fall — #6) — and **oscilloscope** (#14) — the
   newest ~21 ms of raw waveform (`TryReadWaveform`) as a blocks-pen connected trace. Frames mutate `_content.Text` only (push-only-on-change);
   `ItemsChanged` is never raised — on content pages it rebuilds the whole content control.
