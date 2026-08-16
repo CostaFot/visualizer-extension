@@ -67,9 +67,6 @@
   <data name="Command_Visualizer_Subtitle" xml:space="preserve">
     <value>Pin the Visualizer band via the Dock's band manager to see your audio dance</value>
   </data>
-  <data name="Command_Visualizer_Rows" xml:space="preserve">
-    <value>Visualizer (rows)</value>
-  </data>
   <data name="Hub_OpenVisualizer" xml:space="preserve">
     <value>Open visualizer</value>
   </data>
@@ -90,9 +87,6 @@
   </data>
   <data name="Action_OpenVolumeMixer" xml:space="preserve">
     <value>Open volume mixer</value>
-  </data>
-  <data name="Band_Range" xml:space="preserve">
-    <value>{0} – {1}</value>
   </data>
   <data name="Unit_Hz" xml:space="preserve">
     <value>{0} Hz</value>

@@ -13,13 +13,12 @@ public partial class VisualizerCommandsProvider : CommandProvider
 
     // The band is the product; the canvas page is where a dock click lands (the big in-palette
     // vertical visualizer, TODO #12). The extension's discoverable face in the palette root is
-    // the hub page, which lists the canvas, the v1 rows page, the volume mixer, and settings.
+    // the hub page, which lists the canvas, the volume mixer, and settings.
     // ALL dock bands are permanent (TODO #4 verdict — dock styles are bands, picked by pinning,
     // so the dock needs no style setting): the same spectrum through the block renderer
     // (8 bars x 8 levels), the braille renderer (22 bars x 4 levels), and blocks again with the
     // TODO #3 VU dot (a peak-colored icon — the dock's only color channel).
     private readonly VisualizerCanvasPage _canvasPage;
-    private readonly VisualizerPage _rowsPage;
     private readonly VisualizerHubPage _hubPage;
     private readonly VisualizerDockBand _band;
     private readonly VisualizerDockBand _brailleBand;
@@ -39,7 +38,6 @@ public partial class VisualizerCommandsProvider : CommandProvider
         Settings = VisualizerSettingsManager.Instance.Settings;
 
         _canvasPage = new VisualizerCanvasPage(_source);
-        _rowsPage = new VisualizerPage(_source);
         _band = new VisualizerDockBand(
             _source,
             _canvasPage,
@@ -60,7 +58,7 @@ public partial class VisualizerCommandsProvider : CommandProvider
             Resources.Band_Title_Vu,
             vuDot: true);
 
-        _hubPage = new VisualizerHubPage(_canvasPage, _rowsPage);
+        _hubPage = new VisualizerHubPage(_canvasPage);
 
         // The palette face is the hub (mirrors AgentsPanelExtension): one top-level command
         // opening the menu of destinations — canvas, rows, volume mixer, settings. Dock clicks
@@ -90,7 +88,6 @@ public partial class VisualizerCommandsProvider : CommandProvider
         _brailleBand.Dispose();
         _vuBand.Dispose();
         _canvasPage.Dispose();
-        _rowsPage.Dispose();
         _source.Dispose();
         base.Dispose();
         GC.SuppressFinalize(this);

@@ -70,15 +70,6 @@ namespace VisualizerExtension.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to {0} – {1}.
-        /// </summary>
-        public static string Band_Range {
-            get {
-                return ResourceManager.GetString("Band_Range", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Visualizer.
         /// </summary>
         public static string Band_Title {
@@ -111,15 +102,6 @@ namespace VisualizerExtension.Properties {
         public static string Command_Visualizer {
             get {
                 return ResourceManager.GetString("Command_Visualizer", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Visualizer (rows).
-        /// </summary>
-        public static string Command_Visualizer_Rows {
-            get {
-                return ResourceManager.GetString("Command_Visualizer_Rows", resourceCulture);
             }
         }
 

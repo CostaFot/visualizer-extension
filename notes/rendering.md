@@ -81,7 +81,7 @@ Every alternative loses:
   unlike the dock title, where a space falls back differently and breaks the grid). **Braille
   U+2800-28FF in Cascadia Mono is unverified** — test before designing a braille page mode.
 
-## ListPage findings worth keeping (for the rows page and future list work)
+## ListPage findings worth keeping (for future list work — the rows page they served was removed 2026-08-16, TODO #2)
 
 - Typing in the palette **fuzzy-filters and reorders** a plain `IListPage`'s rows against their
   titles (`ListViewModel.cs:163-214`, `:754-782`) — glyph-run titles get scrambled/dropped.

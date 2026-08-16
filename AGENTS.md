@@ -49,9 +49,9 @@ is measured and documented in `notes/rendering.md`; consult it before inventing 
   pinning any of them from the Dock's band manager (TODO #4 verdict — dock styles are bands, not
   settings; future dock renderers just add bands).
 - `Pages/VisualizerHubPage.cs` — the top-level palette entry: a static `ListPage` menu (mirrors
-  AgentsPanelExtension's UsagePage shape, minus the live state) listing the canvas, the rows
-  page, the volume mixer, and the settings form. No lifecycle, no lease — pages acquire their
-  own when opened.
+  AgentsPanelExtension's UsagePage shape, minus the live state) listing the canvas, the volume
+  mixer, and the settings form. No lifecycle, no lease — the canvas page acquires its own when
+  opened.
 - `Pages/VisualizerCanvasPage.cs` — THE in-palette visualizer
   (TODO #12): a `ContentPage` holding one stable `PlainTextContent`
   (`FontFamily.Monospace` — host-guaranteed Cascadia Mono/Consolas), drawn as a 2-D character
@@ -67,12 +67,6 @@ is measured and documented in `notes/rendering.md`; consult it before inventing 
   via `Settings = ...Instance.Settings` in the provider. One choice today: page style. Values are
   read pull-style per tick — changes apply next frame, no restart. Toolkit quirk: a setting's
   visible label is `Description`, not `Label`.
-- `Pages/VisualizerPage.cs` — the v1 rows page, kept reachable via the top-level item's context
-  menu until TODO #13's style setting: one row per band — title is the band's frequency range,
-  subtitle (rendered beside/after the title, so the static label never shifts as the bar
-  breathes) is the horizontal bar (full U+2588 blocks + one left-partial U+2589..U+258F tip —
-  256 steps), plus a VuPalette color chip tag (#3). A `DynamicListPage` that ignores search text — a plain `ListPage`'s rows get
-  fuzzy-filtered/reordered the moment the user types.
 - `Helpers/RenderLoop.cs` — the shared pump: ~15 fps timer, **idle throttle** (2 Hz after ~3 s of
   silence, still sampling → snaps back on audio; a pinned band must not burn CPU all day),
   every tick exception-wrapped (a throw on a pool thread kills the process), and a draining
@@ -174,7 +168,8 @@ Playing audio is fine and expected; deploying the extension remains the user's j
 
 Shipped so far: Tier-2 loopback+FFT dock band with visibility lifecycle, idle throttle, and
 disposal; the ellipsis fix (8-bar budget, measured); the in-palette `VisualizerPage` v1
-(horizontal bars — proved the palette render channel, now the secondary "rows" entry); the
+(horizontal rows — proved the palette render channel, then REMOVED 2026-08-16 at the user's call:
+it brought nothing over the canvas and complicated the code; don't resurrect it); the
 CmdPal-rendering-limits investigation (`notes/rendering.md`) and the vertical
 `VisualizerCanvasPage` with peak caps it produced (TODO #12 + #6, verified live 2026-08-16;
 visual polish deferred to the #3-era work); the braille dock band (#4 — verdict: both bands stay,
@@ -182,8 +177,9 @@ pinning IS the dock style picker); the settings scaffold + page-style switch (#1
 oscilloscope page style (#14 — `TryReadWaveform` on the capture +
 a blocks-pen connected trace, braille pen deliberately skipped as unverified in Cascadia Mono).
 The spectrogram style (#9) shipped 2026-08-16 and was REMOVED the same day — the user didn't
-like it; don't re-propose it. Color (#3) shipped 2026-08-16: the shared `VuPalette` ramp, the
-third "blocks + VU dot" dock band, and the rows page's per-band color chips — with the verdicts
+like it; don't re-propose it. Color (#3) shipped 2026-08-16: the shared `VuPalette` ramp and the
+third "blocks + VU dot" dock band (the rows page's color chips shipped too but left with the
+rows page) — with the verdicts
 that the plain-text canvas CANNOT be colored and `Page.AccentColor` is host-ignored
 (`notes/rendering.md` § "Color channels"). User verdict on the VU dot: not a fan visually, but
 kept on purpose as the live proof that a dock band's icon can change at will — reference

@@ -16,7 +16,7 @@ Byproduct: the plan's open "width jitter" check is resolved — all eight ramp g
 advances in Segoe UI Symbol, so the block renderer cannot make the button breathe. (Braille can —
 see item 4.)
 
-## 2. ~~Replace "open volume mixer" click with our own visualizer page~~ DONE 2026-08-16
+## 2. ~~Replace "open volume mixer" click with our own visualizer page~~ DONE 2026-08-16; the rows page it built was REMOVED 2026-08-16 (see below)
 
 Shipped as `Pages/VisualizerPage.cs`: a `ListPage` with one stable row per band; row titles are
 smooth horizontal bars (full U+2588 blocks + one left-partial U+2589..U+258F tip — measured:
@@ -32,6 +32,13 @@ De-risked before building: the palette's `ListItemViewModel` handles per-item Ti
 (host source, `ListItemViewModel.cs` case nameof(model.Title)) — same channel as the dock. Still
 to verify live: actual page refresh smoothness at 15 fps (mechanism exists; rate unproven).
 The `ContentPage`/Markdown 2-D spectrum idea stays open under item 9.
+
+**REMOVED 2026-08-16** (same day the canvas took over as the main page): user's call — the rows
+page brought nothing over the canvas and complicated the code. `Pages/VisualizerPage.cs`, its hub
+entry, and its resources (`Command_Visualizer_Rows`, `Band_Range`) were deleted; the item-3 color
+chips went with it (their `VuPalette` survives in the VU dock band). Its lasting contributions
+were the proofs: the palette per-item mutation channel, the DynamicListPage fuzzy-filter dodge,
+and the tag color channel (all recorded in AGENTS.md / rendering.md). Don't resurrect it.
 
 ## 3. ~~Color customization (e.g. green → red toward peak)~~ DONE 2026-08-16 (VU dot band + rows chips)
 
@@ -52,10 +59,11 @@ Shipped, after a host-source investigation pass (channel evidence recorded in
   at all, the host feeds them to `BitmapImage.UriSource` which rejects the scheme asynchronously
   (AGENTS.md gotcha corrected; evidence in rendering.md § "Color channels"). Cached `IconInfo`
   instances, step 0 present from first paint so the button width never changes.
-- **Rows page: level chips** — each row carries one tag whose fore+background are the band's
-  palette color (foreground == background makes the fixed U+25CF text read as a solid swatch —
-  an empty-text tag collapses to a sliver). One cached single-tag array per step, shared by all
-  rows.
+- **Rows page: level chips** (gone with the rows page's removal, item 2) — each row carried one
+  tag whose fore+background were the band's palette color (foreground == background makes the
+  fixed U+25CF text read as a solid swatch — an empty-text tag collapses to a sliver). One cached
+  single-tag array per step, shared by all rows; the pattern stays valid for any future list
+  surface.
 
 Findings that CLOSE this item's open ideas (measured/verified in host source, see rendering.md):
 - **The canvas page cannot be colored, period.** `PlainTextContent` is one monochrome `TextBlock`;
@@ -173,9 +181,9 @@ candidate channels:
 
 Shipped as `Pages/VisualizerCanvasPage.cs`: 20 vertical bars × 14 rows (lower-partial blocks,
 112 vertical steps), peak-hold caps (item 6), static frequency-axis footer; dock clicks and the
-top-level entry now land there. The v1 rows page survives behind the top-level item's context menu
-("Visualizer (rows)"), converted to `DynamicListPage` so palette typing can't fuzzy-scramble its
-rows. Verified live 2026-08-16: the canvas renders and animates correctly. First polish pass same
+top-level entry now land there. The v1 rows page initially survived behind the top-level item's
+context menu ("Visualizer (rows)"), converted to `DynamicListPage` so palette typing couldn't
+fuzzy-scramble its rows — until its removal later the same day (item 2). Verified live 2026-08-16: the canvas renders and animates correctly. First polish pass same
 day, after a screen recording showed the bars reading as accidental-looking broken tiles: the
 viewer's TextBlock line spacing makes stacked cells discrete (unfixable — see rendering.md), so
 the bars style now leans into the LED-matrix look — faint U+00B7 dot grid in unlit cells ("off
@@ -195,8 +203,8 @@ proven) character canvas:
 - **Fire/gradient tints** — item 3's color work, within host limits (tags/icons, no text color).
 - **AVS / MilkDrop** — out of scope, we render text in a list host, not shaders. Don't try.
 
-Pick the winner by: looks right > refresh rate > code simplicity. (The horizontal rows page is now
-the secondary entry; item 13's style setting decides whether it stays at all.)
+Pick the winner by: looks right > refresh rate > code simplicity. (The horizontal rows page was
+briefly the secondary entry; the "does it stay" question answered itself — removed, item 2.)
 
 ## 13. ~~Visualizer style switch in settings~~ DONE 2026-08-16 (page style; dock needs none)
 
@@ -220,8 +228,8 @@ restart. Same toolkit quirk as the reference repo: the visible field label comes
 ## 14. ~~Oscilloscope page style~~ DONE 2026-08-16 (verified live same day)
 
 The Winamp waveform trace from item 12's north star, shipped as the third item-13 page style,
-alongside the hub page restructure (single top-level entry → static ListPage menu: canvas, rows,
-volume mixer, settings — mirroring AgentsPanelExtension's UsagePage).
+alongside the hub page restructure (single top-level entry → static ListPage menu: canvas, rows
+(since removed, item 2), volume mixer, settings — mirroring AgentsPanelExtension's UsagePage).
 Data side: `SpectrumCapture.TryReadWaveform(float[])` — the ring already held the raw samples —
 decimates the newest 1024 samples (~21 ms at 48 kHz, a Winamp-ish scope span) into one value per
 canvas column via **signed peak per chunk** (averaging ~17 samples would low-pass the trace and
