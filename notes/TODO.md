@@ -48,7 +48,7 @@ Explore color, with eyes open about host constraints (all verified in the plan/s
 - Color choice (theme, gradient on/off) is a natural future settings-page entry alongside bar
   count / fps / decay.
 
-## 4. Braille rendering spike (may also fix item 1)
+## 4. ~~Braille rendering spike~~ VERDICT 2026-08-16: keep BOTH bands
 
 U+2800–U+28FF braille patterns give a 2x4 dot matrix per character — 2 bars per glyph at 4 levels
 each (it's the trick TUI tools like btop use). Measured 2026-08-16 while fixing item 1, in Segoe
@@ -62,14 +62,18 @@ least one dot lit per cell (a bottom-row dot as the baseline, like the current U
 Spike: render the same spectrum both ways, compare readability at dock size. Renderer stays a
 pure function of `_levels[]`, so this is a candidate for a "render style" setting later.
 
-**Spike code landed 2026-08-16, comparison pending live deploy.** The glyph mapping was extracted
+**Resolved after the live side-by-side: NEITHER retires.** Both bands stay registered permanently —
+picking the style IS the pinning: the user pins blocks, braille, or both from the Dock's band
+manager. This is the dock's de-facto style switch, so item 13's settings work only needs to cover
+the PAGE style (and any future dock renderers just become additional bands).
+
+Spike history: the glyph mapping was extracted
 into `Rendering/ISpectrumRenderer.cs` (pure levels→frame strategy — the seam item 13's style
 setting will switch on): `BlockBarsRenderer` (the original 8×8) and `BrailleBarsRenderer`
 (11 cells → 22 bars × 4 levels; every column keeps its bottom dot lit — baseline cell U+28C0 —
 so the blank-cell trap can't fire). The provider now registers a SECOND dock band,
 `com.costafotiadis.visualizer.dock.spectrum.braille` ("Visualizer (braille)"), sharing the one
-`SpectrumSource`; pin both and A/B the same audio. Verdict + which band retires: TBD after the
-side-by-side.
+`SpectrumSource`.
 
 ## 5. Stereo mirror mode
 
@@ -163,15 +167,17 @@ proven) character canvas:
 Pick the winner by: looks right > refresh rate > code simplicity. (The horizontal rows page is now
 the secondary entry; item 13's style setting decides whether it stays at all.)
 
-## 13. Visualizer style switch in settings
+## 13. Visualizer style switch in settings (PAGE style only)
 
-Once more than one renderer exists, the user picks the style — per surface — via the planned
-CmdPal settings page (JsonSettingsManager, mirror AgentsPanelExtension's UsageSettingsManager):
+The user picks the page style via the planned CmdPal settings page (JsonSettingsManager, mirror
+AgentsPanelExtension's UsageSettingsManager):
 
-- **Dock style**: blocks-8 (current) / braille-high-res (item 4) / stereo mirror (item 5) /
-  oscilloscope (item 12's waveform read).
-- **Page style**: horizontal bars (current v1) / vertical EQ with peak caps / oscilloscope /
-  spectrogram (items 12, 6, 9) — i.e. the Winamp set.
+- **Dock style needs NO setting** — resolved by item 4's verdict: each dock style is its own
+  registered band and the user pins the ones they want (blocks and braille today; a stereo-mirror
+  (item 5) or oscilloscope band would simply be added as more bands).
+- **Page style**: vertical EQ with peak caps (current, `VisualizerCanvasPage`) / horizontal rows
+  (v1, currently the context-menu entry) / oscilloscope / spectrogram (items 12, 6, 9) — i.e. the
+  Winamp set, all just different ways to fill the canvas scratch.
 - Renderers are already pure functions of the levels array, so a style is just "which render
   function + which band count" — wire the choice as a pull-style read on each tick like the
   reference repo's settings, no restart needed. Settings also eventually carry bar count / fps /

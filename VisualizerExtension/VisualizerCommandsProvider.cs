@@ -14,10 +14,10 @@ public partial class VisualizerCommandsProvider : CommandProvider
     // The band is the product; the canvas page is where a click lands (the big in-palette
     // vertical visualizer, TODO #12) and doubles as the extension's discoverable face in the
     // palette root. The v1 rows page stays reachable from the top-level item's context menu until
-    // TODO #13's style setting decides its fate. Two bands while the TODO #4 spike runs: same
-    // spectrum through the block renderer (8 bars x 8 levels) and the braille renderer (22 bars
-    // x 4 levels) — pin both to compare readability at dock size; the loser (or a style setting,
-    // TODO #13) retires one.
+    // TODO #13's style setting decides its fate. BOTH dock bands are permanent (TODO #4 verdict):
+    // the same spectrum through the block renderer (8 bars x 8 levels) and the braille renderer
+    // (22 bars x 4 levels) — the user picks the dock style by pinning one, the other, or both
+    // from the Dock's band manager, so the dock needs no style setting.
     private readonly VisualizerCanvasPage _canvasPage;
     private readonly VisualizerPage _rowsPage;
     private readonly VisualizerDockBand _band;

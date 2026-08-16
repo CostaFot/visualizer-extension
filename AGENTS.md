@@ -42,7 +42,9 @@ is measured and documented in `notes/rendering.md`; consult it before inventing 
 - `Pages/VisualizerDockBand.cs` — the band (from `GetDockBands()`, wrapped in a `CommandItem`).
   ONE item, 8 vertical block glyphs (U+2581..U+2588) — 8 is the measured title-budget max, see
   Gotchas. Click opens `VisualizerCanvasPage`; volume mixer is a `MoreCommands` right-click
-  action. (Two bands are registered while the TODO #4 block-vs-braille A/B runs.)
+  action. TWO bands are registered permanently — block bars (8×8) and braille (22×4): the user
+  picks the dock style by pinning either or both from the Dock's band manager (TODO #4 verdict —
+  dock styles are bands, not settings; future dock renderers just add bands).
 - `Pages/VisualizerCanvasPage.cs` — THE in-palette visualizer and the top-level palette entry
   (TODO #12): a `ContentPage` holding one stable `PlainTextContent`
   (`FontFamily.Monospace` — host-guaranteed Cascadia Mono/Consolas), drawn as a 2-D character
@@ -154,10 +156,10 @@ disposal; the ellipsis fix (8-bar budget, measured); the in-palette `VisualizerP
 (horizontal bars — proved the palette render channel, now the secondary "rows" entry); the
 CmdPal-rendering-limits investigation (`notes/rendering.md`) and the vertical
 `VisualizerCanvasPage` with peak caps it produced (TODO #12 + #6, verified live 2026-08-16;
-visual polish deferred to the #13/#3 work); the braille dock band spike (#4, A/B verdict
-pending).
+visual polish deferred to the #13/#3 work); the braille dock band (#4 — verdict: both bands stay,
+pinning IS the dock style picker).
 **Next up: `notes/TODO.md`** — headline items: user-selectable visualizer styles via settings
-(#13), color exploration (#3), the #4 braille verdict. Also still open, from
+(#13, page style only — dock styles are bands), color exploration (#3). Also still open, from
 `notes/visualizer-extension-plan.md` Step 4: settings page (bar count, target fps, decay, idle
 behavior), Tier-1 peak-meter low-power mode as a settings choice, real PNG logo assets (current
 `Assets/` PNGs are placeholders copied from AgentsPanelExtension — replace before any release),
