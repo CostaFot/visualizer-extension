@@ -3,7 +3,7 @@
 [![GitHub release](https://img.shields.io/github/v/release/CostaFot/visualizer-extension?style=flat-square&logo=github&label=release)](https://github.com/CostaFot/visualizer-extension/releases/latest)
 [![GitHub downloads](https://img.shields.io/github/downloads/CostaFot/visualizer-extension/total?style=flat-square&logo=github&label=downloads)](https://github.com/CostaFot/visualizer-extension/releases)
 
-<img src="listing/screenshot_dock_default.png" width="600"/>
+<img src="listing/visualizer_main_listing.png" width="600"/>
 
 A Windows 11 [Command Palette](https://learn.microsoft.com/en-us/windows/powertoys/command-palette/overview) extension that adds a cool little visualizer on the Command Palette dock.
 
@@ -12,13 +12,11 @@ A Windows 11 [Command Palette](https://learn.microsoft.com/en-us/windows/powerto
 
 ## Installation
 
-<!-- TODO after Store approval: uncomment and fill in the Store ID.
 ### Microsoft Store
 
-<a href="https://apps.microsoft.com/detail/STORE_ID_HERE" target="_self">
+<a href="https://apps.microsoft.com/detail/9P2R1MXQP49Z" target="_self">
 	<img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200"/>
 </a>
--->
 
 <!-- TODO after the WinGet submission is merged: uncomment.
 ### WinGet
@@ -28,7 +26,7 @@ winget install --id CostaFotiadis.VisualizerForCommandPalette
 ```
 -->
 
-Download the `.msixbundle` from the [latest release](https://github.com/CostaFot/visualizer-extension/releases/latest). Store and winget when I get to it.
+..or download the `.msixbundle` from the [latest release](https://github.com/CostaFot/visualizer-extension/releases/latest). winget when I get to it.
 
 ## Features
 

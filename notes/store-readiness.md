@@ -156,11 +156,20 @@ certification with the same value.
 
 ## F. Store submission & post-Store
 
-- [ ] **F16 [user] Submit to Partner Center.** Run `release-msix.yml` → download the
+- [x] **F16 [user] Submit to Partner Center.** *(done 2026-08-17 — approved and live on the
+  Store, ID `9P2R1MXQP49Z`; Store-signed bundle downloaded from Partner Center and re-uploaded to
+  GitHub Release `v1.0.0.0` as `VisualizerExtension_1.0.0.0_Bundle.Msixbundle` — note the
+  Partner-Center capital-M casing, asset URLs are case-sensitive.)* Run `release-msix.yml` → download the
   `.msixbundle` from the GitHub Release → Partner Center → new submission → upload → listing copy
   (B6) + screenshots (E15) + privacy URL (B4) + certification notes (B7) → submit. The Store
   re-signs the bundle.
-- [ ] **F17 [user, then agent] WinGet.** After Store approval only. Package ID
+- [ ] **F17 [user, then agent] WinGet.** *(in progress 2026-08-17 — first submission open as
+  microsoft/winget-pkgs PR #419077 (manifests hand-authored from the AgentsPanel PR #417585
+  pattern, `winget validate` + local `winget install --manifest` both passed; Store-signed
+  signature chain verified on the bundle); `update-winget.yml` copied from MarketExtension and
+  adapted. Remaining: [user] set `WINGET_TOKEN` secret (classic PAT, `public_repo`); after the PR
+  merges, [agent] uncomment the README winget section and drop its "winget when I get to it"
+  line.)* After Store approval only. Package ID
   `CostaFotiadis.VisualizerForCommandPalette` (27-char second segment — fits the 32/segment
   limit). Must point at the **Store-signed** bundle downloaded from Partner Center and
   re-uploaded to the GitHub Release — the self-signed CI bundle fails WinGet's sandbox
